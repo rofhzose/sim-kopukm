@@ -1,10 +1,5 @@
 import pool from "../config/db.js";
 
-/**
- * ✅ GET ALL DATA (dengan optional pagination & filter)
- * URL contoh:
- *   GET /api/data?page=1&limit=50&kecamatan=Karawang%20Barat
- */
 export const getAllData = async (req, res) => {
   try {
     let { page, limit, kecamatan, kelurahan, search } = req.query;
@@ -62,11 +57,6 @@ export const getAllData = async (req, res) => {
   }
 };
 
-/**
- * ✅ GET DATA BY ID
- * URL contoh:
- *   GET /api/data/1
- */
 export const getDataById = async (req, res) => {
   try {
     const { id } = req.params;
