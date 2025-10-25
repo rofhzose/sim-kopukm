@@ -2,14 +2,13 @@ import { cn } from '@/lib/utils'
 
 import Image from "next/image"
 
-export const Logo = ({ className }: { className?: string }) => {
+export const Logo = () => {
   return (
     <Image
       src="/logo.png" // ganti sesuai nama file kamu
       alt="Company Logo"
-      width={130} // sesuaikan ukuran
-      height={40}
-      className={cn("h-auto w-auto", className)}
+      width={170} // sesuaikan ukuran
+      height={20}
       priority // agar logo dimuat lebih cepat
     />
   )
