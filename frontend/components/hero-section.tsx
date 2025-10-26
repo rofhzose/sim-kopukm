@@ -1,11 +1,13 @@
+"use client"
 import React from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { TextEffect } from "@/components/ui/text-effect";
 import { AnimatedGroup } from "@/components/ui/animated-group";
-import { HeroHeader } from "./header";
+import { HeroHeader } from "./navbar/header";
 import { Variants } from "framer-motion";
 import ContentSection1 from "./content-1";
 import ContentSection5 from "./content-5";
@@ -31,6 +33,10 @@ const transitionVariants: { item: Variants } = {
 };
 
 export default function HeroSection() {
+  const MapKarawang = dynamic(() => import("@/components/map/map-karawang"), {
+  ssr: false, // hanya render di client
+  loading: () => <p className="text-center text-sm text-muted-foreground">Loading map...</p>,
+});
   return (
     <>
       <HeroHeader />
@@ -133,6 +139,7 @@ export default function HeroSection() {
                 </AnimatedGroup>
               </div>
             </div>
+            <MapKarawang/>
             <ContentSection1/>
             <ContentSection5/>
           </div>

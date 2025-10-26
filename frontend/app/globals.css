@@ -112,6 +112,24 @@
   --sidebar-ring: oklch(0.553 0.013 58.071);
 }
 
+.leaflet-tooltip.map-tooltip {
+  background: rgba(255,255,255,0.7);
+  border: none;
+  color: #1b4332;
+  font-weight: 600;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.map-label {
+  color: #1e293b;
+  font-weight: 500;
+  text-shadow: 0 0 2px white;
+  pointer-events: none;
+}
+
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
