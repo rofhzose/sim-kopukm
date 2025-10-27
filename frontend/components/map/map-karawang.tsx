@@ -16,7 +16,7 @@ export default function MapKarawang() {
         Peta Persebaran UMKM & Koperasi di Kabupaten Karawang
       </h2>
 
-      <div className="relative w-full h-[600px] rounded-2xl overflow-hidden shadow-xl border border-gray-200">
+      <div className="relative w-full h-[600px] mt-16 rounded-2xl overflow-hidden shadow-xl border border-gray-200">
         <MapView filter={filter} setHoveredData={setHoveredData} />
 
         <MapFilter filter={filter} setFilter={setFilter} />

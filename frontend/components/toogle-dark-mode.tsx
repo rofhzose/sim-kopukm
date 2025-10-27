@@ -19,7 +19,7 @@ export function ModeToggle() {
   if (!mounted) {
     // hindari render DropdownMenu di server
     return (
-      <Button variant="outline" size="sm" disabled>
+      <Button variant="outline" size="lg" disabled>
         <Sun className="h-[1.2rem] w-[1.2rem]" />
       </Button>
     );
@@ -28,7 +28,7 @@ export function ModeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="lg">
           <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
           <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
           <span className="sr-only">Toggle theme</span>
