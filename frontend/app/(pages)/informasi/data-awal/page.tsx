@@ -1,5 +1,5 @@
 "use client";
-import UmkmDashboard from "@/components/umkm/UmkmDashboard";
+import DashboardSummary from "@/components/dashboard/DashboardSummary";
 import UmkmTableKotor from "@/components/umkm/UmkmTableKotor";
 import UmkmTableBersih from "@/components/umkm/UmkmTableBersih";
 import UmkmDapatBantuanTable from "@/components/umkm/UmkmDapatBantuanTable";
@@ -14,7 +14,7 @@ export default function UmkmPage() {
         📋 Data UMKM Karawang
       </h1>
 
-            <UmkmDashboard />
+            <DashboardSummary />
 
       {/* 🔹 Komponen tabel kotor */}
       <UmkmTableKotor />
