@@ -13,7 +13,8 @@ export const menuItems: MenuItem[] = [
     name: "Informasi",
     subItems: [
       { name: "Profile Dinas", href: "/informasi/profile-dinas" },
-      { name: "Data Awal", href: "/informasi/data-awal" },
+      { name: "Data Awal UMKM", href: "/informasi/data-awal/umkm" },
+            { name: "Data Awal Koperasi", href: "/informasi/data-awal/koperasi" },
       { name: "Bantuan Hukum", href: "/informasi/bantuan-hukum" },
       { name: "Aktifitas", href: "/informasi/-aktifitas" },
       { name: "Prestasi", href: "/informasi/-prestasi" },

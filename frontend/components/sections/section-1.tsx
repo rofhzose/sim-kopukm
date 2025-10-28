@@ -55,8 +55,10 @@ export default function SectionOne() {
               ekosistem usaha yang inklusif dan produktif demi kesejahteraan ekonomi Kabupaten Karawang.
             </TextEffect>
             <div className="flex gap-8 pt-10 items-center">
+              <Link href={"/informasi/data-awal/koperasi"}>
               <Button  size={"lg"}>Lihat Data Koperasi</Button>
-            <Link href={"/informasi/data-awal"}>
+              </Link>
+            <Link href={"/informasi/data-awal/umkm"}>
             <Button variant={"outline"} size={"lg"}>Lihat Data UMKM</Button>
             </Link>
             </div>
