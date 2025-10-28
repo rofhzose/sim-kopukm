@@ -3,8 +3,8 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { AnimatedGroup } from "@/components/ui/animated-group";
 import { HeroHeader } from "./navbar/header";
-import ContentSection1 from "./sections/content-1";
-import ContentSection5 from "./sections/content-5";
+import ContentSection1 from "./content-1";
+import ContentSection5 from "./content-5";
 import SectionOne from "./sections/section-1";
 
 

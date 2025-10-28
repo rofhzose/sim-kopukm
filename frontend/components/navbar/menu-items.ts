@@ -8,10 +8,6 @@ export interface MenuItem {
 
 export const menuItems: MenuItem[] = [
   { name: "Beranda", href: "/" },
-  
-  {
-    name: "UMKM", href: "/umkm"
-  },
   {
     name: "Informasi",
     subItems: [

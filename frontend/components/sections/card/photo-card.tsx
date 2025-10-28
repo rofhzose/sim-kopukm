@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from "framer-motion";
 import Image from "next/image";
-import { useState, ReactNode } from "react";
 
 // === Interfaces ===
 interface BadgeProps {
@@ -10,19 +10,20 @@ interface BadgeProps {
   subtitle?: string;
 }
 
+interface Photo {
+  imageSrc: string;
+  badge?: BadgeProps;
+}
+
 interface PhotoCardProps {
-  imageSrc?: string;
-  imageAlt?: string;
-  badge?: BadgeProps | null;
-  className?: string;
-  children?: ReactNode;
-  index?: number;
-  onSwipe?: (dir: number) => void;
-  active?: boolean;
+  photo: Photo;
+  index: number;
+  isFront: boolean;
+  setIndex: React.Dispatch<React.SetStateAction<number>>;
 }
 
 // === Sample Data ===
-const photos = [
+const photos: Photo[] = [
   {
     imageSrc: "/umkm/umkm.jpeg",
     badge: { title: "Mountain View", subtitle: "Switzerland" },
@@ -41,134 +42,111 @@ const photos = [
   },
 ];
 
-// === Main Component ===
-export default function PhotoCardStack() {
-  const [cards, setCards] = useState(photos);
-  const [swiping, setSwiping] = useState(false);
+// === Card Component ===
+const SwipeCard: React.FC<PhotoCardProps> = ({ photo, isFront, setIndex }) => {
+  const [exitX, setExitX] = useState(0);
 
-  const handleSwipe = async (dir: number) => {
-    if (swiping) return; // biar gak double swipe
-    setSwiping(true);
+  const x = useMotionValue(0);
+  const scale = useTransform(x, [-150, 0, 150], [0, 1, 0]);
+  const rotate = useTransform(x, [-150, 0, 150], [-90, 0, 90]);
 
-    // tunggu animasi keluar dulu
-    await new Promise((resolve) => setTimeout(resolve, 400));
+  const variantsFront = {
+    animate: { scale: 1, y: 0, opacity: 1 },
+    exit: (custom: number) => ({
+      x: custom,
+      opacity: 0,
+      scale: 0.85,
+      rotate: custom > 0 ? 15 : -15,
+      transition: { duration: 0.35, ease: "easeInOut" },
+    }),
+  };
 
-    setCards((prev) => {
-      const updated = [...prev];
-      const top = updated.shift();
-      if (top) updated.push(top);
-      return updated;
-    });
+  const variantsBack = {
+    initial: { scale: 0.0, y: 30, opacity: 0.6 },
+    animate: { scale: 0.95, y: 30, opacity: 0.8 },
+  };
 
-    setSwiping(false);
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x < -100) {
+      setExitX(-300);
+      setIndex((prev) => prev + 1);
+    } else if (info.offset.x > 100) {
+      setExitX(300);
+      setIndex((prev) => prev + 1);
+    }
   };
 
   return (
-    <div className="relative w-[350px] h-[500px] mx-auto mt-10 select-none">
-      <AnimatePresence>
-        {cards
-          .slice(0, 3)
-          .reverse()
-          .map((photo, i) => (
-            <SwipeablePhotoCard
-              key={photo.imageSrc || `card-${i}`}
-              {...photo}
-              index={i}
-              onSwipe={handleSwipe}
-              active={i === 0} // hanya top card yang aktif
-            />
-          ))}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// === Swipeable Card ===
-function SwipeablePhotoCard({
-  imageSrc,
-  imageAlt = "photo",
-  badge = null,
-  className = "",
-  index = 0,
-  onSwipe,
-  active = false,
-  children,
-}: PhotoCardProps) {
-  const fallbackImage = "/next.svg";
-  const validSrc = imageSrc && imageSrc.trim() !== "" ? imageSrc : fallbackImage;
-
-  const x = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-15, 15]);
-  const opacity = useTransform(x, [-300, 0, 300], [0, 1, 0]);
-
-  return (
     <motion.div
-      className={`absolute w-full h-full rounded-2xl shadow-2xl overflow-hidden bg-white ${
-        active ? "cursor-grab active:cursor-grabbing" : "pointer-events-none"
-      } ${className}`}
-      style={{
-        x,
-        rotate,
-        opacity,
-        zIndex: 10 - index,
-        scale: 1 - index * 0.05,
-        y: index * 10,
-      }}
-      drag={active ? "x" : false}
+      className="absolute w-full h-full"
+      style={{ x, rotate, scale }}
+      drag={isFront ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.6}
-      onDragEnd={(_, info) => {
-        if (!active) return;
-        if (info.offset.x > 120 && onSwipe) onSwipe(1);
-        else if (info.offset.x < -120 && onSwipe) onSwipe(-1);
-      }}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 - index * 0.05, y: index * 10 }}
-      exit={{
-        x: x.get() > 0 ? 500 : -500,
-        opacity: 0,
-        transition: { duration: 0.4 },
-      }}
+      onDragEnd={handleDragEnd}
+      variants={isFront ? variantsFront : variantsBack}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      custom={exitX}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
     >
-      {/* === Main Image === */}
-      <div className="relative w-full h-full">
-        <Image
-          src={validSrc}
-          alt={imageAlt}
-          fill
-          className="object-cover"
-          priority
+      {/* === Image Card === */}
+      <motion.div
+        className="relative w-full h-full rounded-2xl overflow-hidden"
+        style={{
+          boxShadow: "0 8px 30px rgba(0,0,0,0.25)",
+          border: "2px solid rgba(255,255,255,0.2)",
+          backdropFilter: "blur(6px)",
+        }}
+      >
+        <Image src={photo.imageSrc} alt="photo" fill className="object-cover" style={{ objectFit: "cover", pointerEvents: "none" }} priority />
+
+        {/* === Subtle Stroke / Glow Effect === */}
+        <motion.div
+          className="absolute inset-0 rounded-2xl pointer-events-none"
+          style={{
+            border: "2px solid rgba(255,255,255,0.5)",
+            boxShadow: "inset 0 0 10px rgba(255,255,255,0.3), 0 0 20px rgba(0,0,0,0.2)",
+          }}
         />
 
         {/* === Badge === */}
-        {badge && (
+        {photo.badge && (
           <div className="absolute bottom-0 right-0 w-56 md:w-64 lg:w-72">
             <div className="bg-white/90 backdrop-blur-md rounded-xl shadow-lg p-3 m-3">
               <div className="flex items-start gap-3">
                 <div className="shrink-0 w-12 h-12 rounded-md overflow-hidden">
-                  <Image
-                    src={validSrc}
-                    alt="thumb"
-                    width={48}
-                    height={48}
-                    className="object-cover w-full h-full"
-                  />
+                  <Image src={photo.imageSrc} alt="thumb" width={48} height={48} className="object-cover w-full h-full" />
                 </div>
                 <div>
-                  {badge.title && (
-                    <h4 className="text-sm font-semibold">{badge.title}</h4>
-                  )}
-                  {badge.subtitle && (
-                    <p className="text-xs text-slate-500">{badge.subtitle}</p>
-                  )}
+                  {photo.badge.title && <h4 className="text-sm font-semibold">{photo.badge.title}</h4>}
+                  {photo.badge.subtitle && <p className="text-xs text-slate-500">{photo.badge.subtitle}</p>}
                 </div>
               </div>
             </div>
           </div>
         )}
-      </div>
-
-      {children && <div className="mt-8">{children}</div>}
+      </motion.div>
     </motion.div>
+  );
+};
+
+// === Main Component ===
+export default function PhotoCardStack() {
+  const [index, setIndex] = useState(0);
+  const total = photos.length;
+
+  const current = photos[index % total];
+  const next = photos[(index + 1) % total];
+
+  return (
+    <div className="relative w-[900px] h-[500px] mx-auto select-none">
+      <AnimatePresence initial={false}>
+        {/* Back Card */}
+        <SwipeCard key={(index + 1) % total} photo={next} index={index + 1} isFront={false} setIndex={setIndex} />
+        {/* Front Card */}
+        <SwipeCard key={index % total} photo={current} index={index} isFront={true} setIndex={setIndex} />
+      </AnimatePresence>
+    </div>
   );
 }
