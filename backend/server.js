@@ -6,7 +6,7 @@ import pool from "./config/db.js";
 
 dotenv.config();
 
-// tes koneksi DB
+// tes koneksi DB apa aja bikin koding
 (async () => {
   try {
     const conn = await pool.getConnection();
