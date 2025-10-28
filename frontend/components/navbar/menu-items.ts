@@ -10,7 +10,7 @@ export const menuItems: MenuItem[] = [
   { name: "Beranda", href: "/" },
   
   {
-    name: "Berita"
+    name: "UMKM", href: "/umkm"
   },
   {
     name: "Informasi",
