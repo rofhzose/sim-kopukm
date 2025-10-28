@@ -12,6 +12,9 @@ export const menuItems: MenuItem[] = [
   {
     name: "UMKM", href: "/umkm"
   },
+    {
+    name: "KOPERASI", href: "/koperasi"
+  },
   {
     name: "Informasi",
     subItems: [

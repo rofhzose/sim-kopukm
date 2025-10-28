@@ -2,3 +2,5 @@
 [2025-10-28T06:22:36.461Z] 404 GET /api/data/umkm/dashboard - Endpoint tidak ditemukan: /api/data/umkm/dashboard
 [2025-10-28T06:23:04.071Z] 404 GET /api/data/umkm/dashboard - Endpoint tidak ditemukan: /api/data/umkm/dashboard
 [2025-10-28T06:23:24.708Z] 404 GET /api/data/umkm/dashboard - Endpoint tidak ditemukan: /api/data/umkm/dashboard
+[2025-10-28T07:46:24.417Z] 404 GET /api/data/koperasi/bersihkan - Endpoint tidak ditemukan: /api/data/koperasi/bersihkan
+[2025-10-28T08:08:47.887Z] 404 GET /api/koperasi/dashboard - Endpoint tidak ditemukan: /api/koperasi/dashboard
