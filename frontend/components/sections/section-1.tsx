@@ -56,8 +56,7 @@ export default function SectionOne() {
 
           {/* Kanan Beranda */}
           <div className="flex-1">
-            <PhotoCardStack/>
-            
+            <PhotoCardStack />
           </div>
         </AnimatedGroup>
       </div>
