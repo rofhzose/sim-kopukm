@@ -1,15 +1,29 @@
 import express from "express";
-import { register, login } from "../controllers/authController.js";
-import { verifyToken, checkRole } from "../middleware/authMiddleware.js";
+import {
+  registerUser,
+  loginUser,
+  getAllUsers,
+  updateUserRole,
+  deleteUser,
+  updateUser,
+} from "../controllers/authController.js";
+
+import { verifyToken, isAdmin, isSuperAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/register", register);
-router.post("/login", login);
+/**
+ * 🔐 Auth routes
+ */
+router.post("/register", registerUser);
+router.post("/login", loginUser);
 
-// contoh: hanya admin bisa akses ini
-router.get("/admin", verifyToken, checkRole("admin"), (req, res) => {
-  res.json({ message: `Halo Admin ${req.user.username}` });
-});
+/**
+ * 👥 User management (protected)
+ */
+router.get("/users", verifyToken, isAdmin, getAllUsers); // hanya admin/super_admin
+router.put("/users/:id/role", verifyToken, isSuperAdmin, updateUserRole); // hanya super_admin
+router.put("/users/:id", verifyToken, updateUser); // update profil
+router.delete("/users/:id", verifyToken, isSuperAdmin, deleteUser); // hanya super_admin
 
 export default router;
