@@ -1,50 +1,22 @@
 import jwt from "jsonwebtoken";
 
-/**
- * 🛡️ Middleware untuk verifikasi JWT token
- */
 export const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ success: false, message: "Token tidak ditemukan" });
-  }
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) return res.status(401).json({ message: "Token tidak ditemukan" });
 
   const token = authHeader.split(" ")[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secretkey");
-    req.user = decoded;
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ message: "Token tidak valid" });
+    req.user = user;
     next();
-  } catch (err) {
-    return res.status(403).json({ success: false, message: "Token tidak valid atau sudah kadaluarsa" });
-  }
+  });
 };
 
-/**
- * 👤 Hanya untuk role tertentu
- * Contoh penggunaan: roleAccess("admin", "super_admin")
- */
-export const roleAccess = (...allowedRoles) => {
+export const checkRole = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !req.user.role) {
-      return res.status(401).json({ success: false, message: "User belum login" });
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: "Akses ditolak (role tidak sesuai)" });
     }
-
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ success: false, message: "Akses ditolak, role tidak diizinkan" });
-    }
-
     next();
   };
 };
-
-/**
- * 🎯 Middleware khusus per role (shortcut)
- */
-
-export const isUser = roleAccess("user", "admin", "sekdin", "kadin", "super_admin");
-export const isAdmin = roleAccess("admin", "super_admin");
-export const isSekdin = roleAccess("sekdin", "super_admin");
-export const isKadin = roleAccess("kadin", "super_admin");
-export const isSuperAdmin = roleAccess("super_admin");

@@ -4,11 +4,3 @@
 [2025-10-28T06:23:24.708Z] 404 GET /api/data/umkm/dashboard - Endpoint tidak ditemukan: /api/data/umkm/dashboard
 [2025-10-28T07:46:24.417Z] 404 GET /api/data/koperasi/bersihkan - Endpoint tidak ditemukan: /api/data/koperasi/bersihkan
 [2025-10-28T08:08:47.887Z] 404 GET /api/koperasi/dashboard - Endpoint tidak ditemukan: /api/koperasi/dashboard
-[2025-10-30T17:32:00.088Z] 404 GET /api/data/dashboard/jumlah-umkm - Endpoint tidak ditemukan: /api/data/dashboard/jumlah-umkm
-[2025-10-30T17:35:02.263Z] 404 GET /api/data/dashboard/jumlah-umkm - Endpoint tidak ditemukan: /api/data/dashboard/jumlah-umkm
-[2025-10-30T17:35:03.877Z] 404 GET /api/data/dashboard/jumlah-umkm - Endpoint tidak ditemukan: /api/data/dashboard/jumlah-umkm
-[2025-10-30T17:49:10.045Z] 404 GET /api/dashboard/umkm/jumlah/penerima-bantuan - Endpoint tidak ditemukan: /api/dashboard/umkm/jumlah/penerima-bantuan
-[2025-10-30T17:50:09.920Z] 404 GET /api/dashboard/umkm/bantuan-belum-lengkap - Endpoint tidak ditemukan: /api/dashboard/umkm/bantuan-belum-lengkap
-[2025-10-30T17:50:15.399Z] 404 GET /api/dashboard/umkm/bantuan-belum-lengkap - Endpoint tidak ditemukan: /api/dashboard/umkm/bantuan-belum-lengkap
-[2025-10-30T18:01:39.707Z] 404 GET /api/dashboard/umkm/bantuan/ringkasan-tidak-terdaftar - Endpoint tidak ditemukan: /api/dashboard/umkm/bantuan/ringkasan-tidak-terdaftar
-[2025-10-30T18:03:43.359Z] 404 GET /api/dashboard/umkm/bantuan/total-tidak-terdaftar - Endpoint tidak ditemukan: /api/dashboard/umkm/bantuan/total-tidak-terdaftar
