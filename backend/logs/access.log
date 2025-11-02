@@ -207,3 +207,5 @@
 ::1 - - [28/Oct/2025:17:01:03 +0000] "GET /api/data/duplikat/umkm?limit=0 HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0"
 ::1 - - [28/Oct/2025:17:01:08 +0000] "GET /api/data/koperasi/dashboard HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0"
 ::1 - - [28/Oct/2025:17:01:09 +0000] "GET /api/data/koperasi/dashboard HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0"
+127.0.0.1 - - [02/Nov/2025:03:52:16 +0000] "GET /api/dashboard/umkm-summary HTTP/1.1" 200 90 "-" "PostmanRuntime/7.49.1"
+127.0.0.1 - - [02/Nov/2025:03:52:31 +0000] "GET /api/dashboard/bantuan-summary HTTP/1.1" 200 141 "-" "PostmanRuntime/7.49.1"
