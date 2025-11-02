@@ -1,34 +1,34 @@
 # ==========================================
-# 🧱 1. Gunakan Node versi stabil
+# 🧱 Gunakan Node versi stabil
 # ==========================================
 FROM node:20
 
 # ==========================================
-# 📂 2. Set working directory ke dalam container
+# 📂 Set working directory di container
 # ==========================================
 WORKDIR /app
 
 # ==========================================
-# 📦 3. Copy file package.json dan package-lock.json dari backend
+# 📦 Copy file package.json dan package-lock.json
 # ==========================================
-COPY backend/package*.json ./
+COPY package*.json ./
 
 # ==========================================
-# 📦 4. Install dependencies
+# ⚙️ Install dependencies
 # ==========================================
 RUN npm install --production
 
 # ==========================================
-# 📁 5. Copy seluruh kode backend ke dalam container
+# 📁 Copy seluruh source code backend
 # ==========================================
-COPY backend .
+COPY . .
 
 # ==========================================
-# 🔥 6. Expose port (ubah sesuai app lo)
+# 🌍 Expose port API
 # ==========================================
 EXPOSE 4849
 
 # ==========================================
-# 🚀 7. Jalankan aplikasi
+# 🚀 Jalankan app
 # ==========================================
 CMD ["npm", "run", "dev"]
