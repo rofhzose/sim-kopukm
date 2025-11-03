@@ -58,7 +58,7 @@ export default function SectionOne() {
               <Link href={"/informasi/data-awal/koperasi"}>
               <Button  size={"lg"}>Lihat Data Koperasi</Button>
               </Link>
-            <Link href={"/informasi/data-awal/umkm"}>
+            <Link href={"/informasi/data-awal/dashboard"}>
             <Button variant={"outline"} size={"lg"}>Lihat Data UMKM</Button>
             </Link>
             </div>

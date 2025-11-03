@@ -4,3 +4,18 @@
 [2025-10-28T06:23:24.708Z] 404 GET /api/data/umkm/dashboard - Endpoint tidak ditemukan: /api/data/umkm/dashboard
 [2025-10-28T07:46:24.417Z] 404 GET /api/data/koperasi/bersihkan - Endpoint tidak ditemukan: /api/data/koperasi/bersihkan
 [2025-10-28T08:08:47.887Z] 404 GET /api/koperasi/dashboard - Endpoint tidak ditemukan: /api/koperasi/dashboard
+[2025-11-02T07:22:55.076Z] 500 GET /api/dashboard/umkm-summary - Cannot set property query of #<IncomingMessage> which has only a getter
+[2025-11-02T07:23:18.082Z] 500 GET /api/dashboard/umkm-summary - Cannot set property query of #<IncomingMessage> which has only a getter
+[2025-11-02T07:48:14.833Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:48:17.263Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:48:17.264Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:48:27.341Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:48:27.342Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:48:33.184Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:48:33.186Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:48:36.749Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:48:36.751Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:49:19.122Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:49:19.124Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:49:29.920Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-02T07:49:29.922Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify

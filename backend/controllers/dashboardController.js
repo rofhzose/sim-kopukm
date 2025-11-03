@@ -430,6 +430,60 @@ export const getUMKMSummary = async (req, res) => {
   }
 };
 
+export const getUMKMList = async (req, res) => {
+  try {
+    const { page = 1, limit = 100 } = req.query;
+    const offset = (page - 1) * limit;
+
+    // 🔹 Ambil semua kolom dari tabel data_umkm
+    const [rows] = await pool.query(
+      `
+      SELECT 
+        id,
+        nama,
+        jenis_kelamin,
+        nama_usaha,
+        alamat,
+        kecamatan,
+        desa,
+        longitude,
+        latitude,
+        jenis_ukm,
+        nib
+      FROM data_umkm
+      ORDER BY id ASC
+      LIMIT ? OFFSET ?;
+      `,
+      [parseInt(limit), parseInt(offset)]
+    );
+
+    // 🔹 Hitung total semua data
+    const [[{ total }]] = await pool.query(`
+      SELECT COUNT(*) AS total FROM data_umkm;
+    `);
+
+    const totalPages = Math.ceil(total / limit);
+
+    res.json({
+      success: true,
+      data: rows,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages,
+      },
+    });
+  } catch (err) {
+    console.error("❌ getUMKMList:", err.message);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+
 /* ================================================================
    🎁 2. STATISTIK BANTUAN (total & coverage)
 ================================================================ */
@@ -465,6 +519,38 @@ export const getBantuanSummary = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+export const getBantuanList = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = (page - 1) * limit;
+
+    const [rows] = await pool.query(`
+      SELECT * FROM data_bantuan_umkm
+      ORDER BY id DESC
+      LIMIT ? OFFSET ?;
+    `, [limit, offset]);
+
+    const [[{ total }]] = await pool.query(`
+      SELECT COUNT(*) AS total FROM data_bantuan_umkm;
+    `);
+
+    res.json({
+      success: true,
+      data: rows,
+      pagination: {
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (err) {
+    console.error("❌ getBantuanList:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 
 /* ================================================================
    🧾 3. PROFIL BANTUAN (lengkap / belum lengkap)

@@ -7,6 +7,9 @@ import helmet from "helmet";
 import morgan from "morgan";
 import fs from "fs";
 import path from "path";
+import rateLimit from "express-rate-limit";
+import xss from "xss-clean";
+import hpp from "hpp";
 
 import pool from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -17,16 +20,12 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 // =========================
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4849;
+const NODE_ENV = process.env.NODE_ENV || "development";
 
 // =========================
-// 🔹 Middleware umum
+// 🔹 Folder log
 // =========================
-app.use(express.json());
-app.use(cors());
-app.use(helmet());
-
-// Setup logging folder & stream
 const logDir = path.join(process.cwd(), "logs");
 if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
 
@@ -34,8 +33,59 @@ const accessLogStream = fs.createWriteStream(path.join(logDir, "access.log"), {
   flags: "a",
 });
 
+// =========================
+// 🔹 Middleware umum
+// =========================
+app.use(express.json());
 app.use(morgan("dev"));
 app.use(morgan("combined", { stream: accessLogStream }));
+
+// Security Middleware
+app.use(helmet({
+  contentSecurityPolicy: NODE_ENV === "production" ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  } : false,
+  crossOriginEmbedderPolicy: false,
+}));
+
+app.use(xss());
+app.use(hpp());
+
+// Rate Limit (maks 100 request per 15 menit per IP)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests, please try again later.",
+});
+app.use(limiter);
+
+// =========================
+// 🔹 CORS Setup (Lokal + Production)
+// =========================
+const allowedOrigins =
+  NODE_ENV === "production"
+    ? ["https://khfdz.my.id", "http://khfdz.my.id"]
+    : ["http://localhost:3000", "http://127.0.0.1:3000", "http://api.khfdz.my.id"];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn("🚫 Blocked CORS origin:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
 // =========================
 // 🔹 Tes koneksi database
@@ -54,7 +104,7 @@ app.use(morgan("combined", { stream: accessLogStream }));
 // 🔹 Routing
 // =========================
 app.get("/", (req, res) => {
-  res.send("🚀 SIM-KOPUKM Backend Aktif!");
+  res.send("🚀 API KHFDZ Backend Aktif!");
 });
 
 app.use("/api/auth", authRoutes);
@@ -92,7 +142,7 @@ app.use((err, req, res, next) => {
 // 🔹 Setup HTTP & Socket.io
 // =========================
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, { cors: { origin: allowedOrigins } });
 
 io.on("connection", (socket) => {
   console.log("🟢 Socket connected:", socket.id);
@@ -102,6 +152,7 @@ io.on("connection", (socket) => {
 // =========================
 // 🔹 Jalankan server
 // =========================
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
+const HOST = NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1";
+server.listen(PORT, HOST, () => {
+  console.log(`🚀 Server running on http://${HOST}:${PORT}`);
 });
