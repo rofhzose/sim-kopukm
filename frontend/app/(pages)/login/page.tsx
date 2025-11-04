@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
+import axiosInstance from "@/lib/axiosInstance"; // ✅ pakai instance global
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
@@ -14,7 +14,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
-  // ambil ?redirect= dari URL (misal /login?redirect=/informasi/data-awal/umkm)
   const redirectUrl = searchParams.get("redirect");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,19 +26,16 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await axios.post("http://127.0.0.1:4849/api/auth/login", form);
+      // ✅ gunakan axiosInstance agar otomatis pakai baseURL dari .env
+      const res = await axiosInstance.post("/auth/login", form);
 
       if (res.data.success) {
-        // ✅ Simpan token ke localStorage
+        // simpan token ke localStorage
         localStorage.setItem("token", res.data.token);
 
-        // ✅ Pastikan token tersimpan dulu sebelum redirect
+        // redirect setelah login sukses
         setTimeout(() => {
-          if (redirectUrl) {
-            router.push(redirectUrl);
-          } else {
-            router.push("/");
-          }
+          router.push(redirectUrl || "/");
         }, 300);
       } else {
         setError(res.data.message || "Login gagal");
