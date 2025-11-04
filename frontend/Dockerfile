@@ -3,20 +3,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Salin file dependensi dulu (biar caching efisien)
+# Salin dependensi dulu (biar caching efisien)
 COPY package*.json ./
-
-# Install dependency
 RUN npm install
 
 # Salin semua source code
 COPY . .
 
-# Tentukan environment (default: production)
-ARG NODE_ENV=production
-ENV NODE_ENV=$NODE_ENV
-
-# Build Next.js (static + SSR)
+# Build Next.js
 RUN npm run build
 
 
@@ -28,10 +22,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Salin hasil build dari tahap sebelumnya
-COPY --from=builder /app ./
+# Salin hanya file hasil build & node_modules dari tahap sebelumnya
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/public ./public
 
-# Expose port default Next.js
 EXPOSE 3000
 
 # Jalankan Next.js

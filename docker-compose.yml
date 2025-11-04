@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: simkopukm-backend
+    restart: always
+    ports:
+      - "4849:4849"
+    environment:
+      - NODE_ENV=production
+    working_dir: /app
+    command: npm run dev
+
+  frontend:
+    build: ./frontend
+    container_name: simkopukm-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    working_dir: /app
+    command: npm start
