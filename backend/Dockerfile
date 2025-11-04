@@ -24,9 +24,8 @@ RUN npm ci --omit=dev
 COPY . .
 
 # ==========================================
-# 🔒 Pastikan izin file aman
+# ⚙️ Jalankan sebagai user node (aman tanpa chown)
 # ==========================================
-RUN chown -R node:node /app
 USER node
 
 # ==========================================
