@@ -432,12 +432,20 @@ export const getUMKMSummary = async (req, res) => {
 
 export const getUMKMList = async (req, res) => {
   try {
-    const { page = 1, limit = 100 } = req.query;
-    const offset = (page - 1) * limit;
+    const {
+      page = 1,
+      limit = 100,
+      search = "",
+      kecamatan = "",
+      desa = "",
+      jenis_ukm = "",
+    } = req.query;
 
-    // 🔹 Ambil semua kolom dari tabel data_umkm
-    const [rows] = await pool.query(
-      `
+    const offset = (page - 1) * limit;
+    const params = [];
+
+    // 🧩 Base Query
+    let sql = `
       SELECT 
         id,
         nama,
@@ -451,17 +459,88 @@ export const getUMKMList = async (req, res) => {
         jenis_ukm,
         nib
       FROM data_umkm
-      ORDER BY id ASC
-      LIMIT ? OFFSET ?;
-      `,
-      [parseInt(limit), parseInt(offset)]
-    );
+      WHERE 1=1
+    `;
 
-    // 🔹 Hitung total semua data
-    const [[{ total }]] = await pool.query(`
-      SELECT COUNT(*) AS total FROM data_umkm;
-    `);
+    // 🔎 CASE INSENSITIVE SEARCH FIX
+    if (search) {
+      sql += `
+        AND (
+          LOWER(nama) LIKE ? OR
+          LOWER(nama_usaha) LIKE ? OR
+          LOWER(nib) LIKE ? OR
+          LOWER(alamat) LIKE ? OR
+          LOWER(kecamatan) LIKE ? OR
+          LOWER(desa) LIKE ? OR
+          LOWER(jenis_ukm) LIKE ?
+        )
+      `;
+      const s = `%${search.toLowerCase()}%`;
+      for (let i = 0; i < 7; i++) params.push(s);
+    }
 
+    // 🔍 Filter tambahan
+    if (kecamatan) {
+      sql += ` AND LOWER(kecamatan) = ?`;
+      params.push(kecamatan.toLowerCase());
+    }
+
+    if (desa) {
+      sql += ` AND LOWER(desa) = ?`;
+      params.push(desa.toLowerCase());
+    }
+
+    if (jenis_ukm) {
+      sql += ` AND LOWER(jenis_ukm) = ?`;
+      params.push(jenis_ukm.toLowerCase());
+    }
+
+    // 🔢 Order & Limit
+    sql += ` ORDER BY id ASC LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [rows] = await pool.query(sql, params);
+
+    // 🧮 Hitung total hasil
+    let countQuery = `
+      SELECT COUNT(*) AS total
+      FROM data_umkm
+      WHERE 1=1
+    `;
+    const countParams = [];
+
+    if (search) {
+      countQuery += `
+        AND (
+          LOWER(nama) LIKE ? OR
+          LOWER(nama_usaha) LIKE ? OR
+          LOWER(nib) LIKE ? OR
+          LOWER(alamat) LIKE ? OR
+          LOWER(kecamatan) LIKE ? OR
+          LOWER(desa) LIKE ? OR
+          LOWER(jenis_ukm) LIKE ?
+        )
+      `;
+      const s = `%${search.toLowerCase()}%`;
+      for (let i = 0; i < 7; i++) countParams.push(s);
+    }
+
+    if (kecamatan) {
+      countQuery += ` AND LOWER(kecamatan) = ?`;
+      countParams.push(kecamatan.toLowerCase());
+    }
+
+    if (desa) {
+      countQuery += ` AND LOWER(desa) = ?`;
+      countParams.push(desa.toLowerCase());
+    }
+
+    if (jenis_ukm) {
+      countQuery += ` AND LOWER(jenis_ukm) = ?`;
+      countParams.push(jenis_ukm.toLowerCase());
+    }
+
+    const [[{ total }]] = await pool.query(countQuery, countParams);
     const totalPages = Math.ceil(total / limit);
 
     res.json({
@@ -475,13 +554,160 @@ export const getUMKMList = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ getUMKMList:", err.message);
+    console.error("❌ getUMKMList Error:", err.message);
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Terjadi kesalahan server saat mengambil data UMKM.",
     });
   }
 };
+
+export const getUMKMFilters = async (req, res) => {
+  try {
+    const [kecamatanRows] = await pool.query(`
+      SELECT DISTINCT kecamatan FROM data_umkm 
+      WHERE kecamatan IS NOT NULL AND kecamatan <> '' 
+      ORDER BY kecamatan ASC;
+    `);
+
+    const [desaRows] = await pool.query(`
+      SELECT DISTINCT desa FROM data_umkm 
+      WHERE desa IS NOT NULL AND desa <> '' 
+      ORDER BY desa ASC;
+    `);
+
+    const [jenisRows] = await pool.query(`
+      SELECT DISTINCT jenis_ukm FROM data_umkm 
+      WHERE jenis_ukm IS NOT NULL AND jenis_ukm <> '' 
+      ORDER BY jenis_ukm ASC;
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        kecamatan: kecamatanRows.map((r) => r.kecamatan),
+        desa: desaRows.map((r) => r.desa),
+        jenis_ukm: jenisRows.map((r) => r.jenis_ukm),
+      },
+    });
+  } catch (err) {
+    console.error("❌ getUMKMFilters:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Gagal memuat data filter.",
+    });
+  }
+};
+
+// ===============================
+// 🔹 GET DETAIL UMKM DUPLIKAT
+// ===============================
+// ===============================
+// 🔹 GET SUMMARY UMKM DUPLIKAT
+// ===============================
+export const getUMKMDuplikatSummary = async (req, res) => {
+  try {
+    const [duplikat] = await pool.query(`
+      SELECT 
+        nama,
+        nama_usaha,
+        kecamatan,
+        desa,
+        COUNT(*) AS jumlah
+      FROM data_umkm
+      WHERE nama != '' AND nama_usaha != ''
+      GROUP BY nama, nama_usaha, kecamatan, desa
+      HAVING COUNT(*) > 1;
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        total_duplikat_group: duplikat.length, // jumlah grup duplikat
+        total_record_duplikat: duplikat.reduce(
+          (acc, row) => acc + (row.jumlah - 1),
+          0
+        ), // total record duplikat (bukan unique)
+      },
+    });
+  } catch (err) {
+    console.error("❌ getUMKMDuplikatSummary:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Gagal mengambil summary UMKM duplikat.",
+    });
+  }
+};
+
+
+
+// ===============================
+// 🔹 GET LIST DETAIL UMKM DUPLIKAT
+// ===============================
+// ✅ Controller: getUMKMDuplikatList
+export const getUMKMDuplikatList = async (req, res) => {
+  const { page = 1, limit = 50 } = req.query;
+  const offset = (page - 1) * limit;
+
+  try {
+    // Ambil daftar kombinasi nama+usaha yang duplikat
+    const [duplikatGroups] = await pool.query(`
+      SELECT 
+        nama,
+        nama_usaha,
+        kecamatan,
+        desa,
+        COUNT(*) AS jumlah
+      FROM data_umkm
+      WHERE nama != '' AND nama_usaha != ''
+      GROUP BY nama, nama_usaha, kecamatan, desa
+      HAVING COUNT(*) > 1
+      ORDER BY jumlah DESC
+      LIMIT ? OFFSET ?
+    `, [Number(limit), Number(offset)]);
+
+    // Ambil semua data UMKM yang masuk dalam grup duplikat tersebut
+    const kondisi = duplikatGroups.map(
+      g => `(nama = ${pool.escape(g.nama)} AND nama_usaha = ${pool.escape(g.nama_usaha)} AND kecamatan = ${pool.escape(g.kecamatan)} AND desa = ${pool.escape(g.desa)})`
+    ).join(' OR ');
+
+    let umkmDuplikat = [];
+    if (kondisi) {
+      [umkmDuplikat] = await pool.query(`
+        SELECT 
+          id, nama, jenis_kelamin, nama_usaha, alamat,
+          kecamatan, desa, longitude, latitude, jenis_ukm, nib
+        FROM data_umkm
+        WHERE ${kondisi}
+        ORDER BY nama, nama_usaha
+      `);
+    }
+
+    res.json({
+      success: true,
+      pagination: {
+        current_page: Number(page),
+        per_page: Number(limit),
+        total_group: duplikatGroups.length
+      },
+      data: umkmDuplikat
+    });
+  } catch (err) {
+    console.error("❌ getUMKMDuplikatList:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Gagal mengambil data UMKM duplikat."
+    });
+  }
+};
+
+
+
+
+
+
+
+
 
 
 /* ================================================================
@@ -522,34 +748,174 @@ export const getBantuanSummary = async (req, res) => {
 
 export const getBantuanList = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 100;
+    const {
+      page = 1,
+      limit = 100,
+      search = "",
+      kecamatan = "",
+      jenis_alat_bantu = "",
+      tahun = "",
+      keterangan = "",
+    } = req.query;
+
     const offset = (page - 1) * limit;
+    const params = [];
 
-    const [rows] = await pool.query(`
-      SELECT * FROM data_bantuan_umkm
-      ORDER BY id DESC
-      LIMIT ? OFFSET ?;
-    `, [limit, offset]);
+    // 🧱 Base query
+    let sql = `
+      SELECT 
+        id,
+        nama,
+        nik,
+        nama_produk,
+        nama_umkm,
+        alamat,
+        kecamatan,
+        no_hp,
+        nib,
+        no_pirt,
+        no_halal,
+        jenis_alat_bantu,
+        tahun,
+        keterangan
+      FROM data_bantuan_umkm
+      WHERE 1=1
+    `;
 
-    const [[{ total }]] = await pool.query(`
-      SELECT COUNT(*) AS total FROM data_bantuan_umkm;
-    `);
+    // 🔍 Global search
+    if (search) {
+      sql += ` AND (
+        nama LIKE ? OR 
+        nama_umkm LIKE ? OR 
+        nama_produk LIKE ? OR 
+        nik LIKE ?
+      )`;
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    // 🔎 Filter tambahan
+    if (kecamatan) {
+      sql += ` AND kecamatan = ?`;
+      params.push(kecamatan);
+    }
+
+    if (jenis_alat_bantu) {
+      sql += ` AND jenis_alat_bantu = ?`;
+      params.push(jenis_alat_bantu);
+    }
+
+    if (tahun) {
+      sql += ` AND tahun = ?`;
+      params.push(tahun);
+    }
+
+    if (keterangan) {
+      sql += ` AND keterangan = ?`;
+      params.push(keterangan);
+    }
+
+    // 🔢 Order & pagination
+    sql += ` ORDER BY id DESC LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), parseInt(offset));
+
+    // Eksekusi query utama
+    const [rows] = await pool.query(sql, params);
+
+    // 🧮 Hitung total data
+    let countSql = `
+      SELECT COUNT(*) AS total FROM data_bantuan_umkm WHERE 1=1
+    `;
+    const countParams = [];
+
+    if (search) {
+      countSql += ` AND (
+        nama LIKE ? OR 
+        nama_umkm LIKE ? OR 
+        nama_produk LIKE ? OR 
+        nik LIKE ?
+      )`;
+      countParams.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    if (kecamatan) {
+      countSql += ` AND kecamatan = ?`;
+      countParams.push(kecamatan);
+    }
+
+    if (jenis_alat_bantu) {
+      countSql += ` AND jenis_alat_bantu = ?`;
+      countParams.push(jenis_alat_bantu);
+    }
+
+    if (tahun) {
+      countSql += ` AND tahun = ?`;
+      countParams.push(tahun);
+    }
+
+    if (keterangan) {
+      countSql += ` AND keterangan = ?`;
+      countParams.push(keterangan);
+    }
+
+    const [[{ total }]] = await pool.query(countSql, countParams);
+    const totalPages = Math.ceil(total / limit);
 
     res.json({
       success: true,
       data: rows,
       pagination: {
         total,
-        page,
-        totalPages: Math.ceil(total / limit),
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages,
       },
     });
   } catch (err) {
     console.error("❌ getBantuanList:", err.message);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan server saat mengambil data bantuan.",
+    });
   }
 };
+
+export const getBantuanFilters = async (req, res) => {
+  try {
+    const [kecamatanRows] = await pool.query(`
+      SELECT DISTINCT kecamatan FROM data_bantuan_umkm 
+      WHERE kecamatan IS NOT NULL AND kecamatan <> '' 
+      ORDER BY kecamatan ASC;
+    `);
+
+    const [jenisRows] = await pool.query(`
+      SELECT DISTINCT jenis_alat_bantu FROM data_bantuan_umkm 
+      WHERE jenis_alat_bantu IS NOT NULL AND jenis_alat_bantu <> '' 
+      ORDER BY jenis_alat_bantu ASC;
+    `);
+
+    const [tahunRows] = await pool.query(`
+      SELECT DISTINCT tahun FROM data_bantuan_umkm 
+      WHERE tahun IS NOT NULL 
+      ORDER BY tahun DESC;
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        kecamatan: kecamatanRows.map((r) => r.kecamatan),
+        jenis_alat_bantu: jenisRows.map((r) => r.jenis_alat_bantu),
+        tahun: tahunRows.map((r) => r.tahun),
+      },
+    });
+  } catch (err) {
+    console.error("❌ getBantuanFilters:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Gagal memuat data filter bantuan.",
+    });
+  }
+};
+
 
 
 /* ================================================================

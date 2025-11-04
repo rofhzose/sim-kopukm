@@ -19,3 +19,16 @@
 [2025-11-02T07:49:19.124Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
 [2025-11-02T07:49:29.920Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
 [2025-11-02T07:49:29.922Z] 404 GET /api/auth/verify - Endpoint tidak ditemukan: /api/auth/verify
+[2025-11-04T06:00:40.645Z] 404 GET /dashboard/umkm-list?page=1&limit=50&search=&kecamatan=&desa=&jenis_ukm= - Endpoint tidak ditemukan: /dashboard/umkm-list?page=1&limit=50&search=&kecamatan=&desa=&jenis_ukm=
+[2025-11-04T06:00:40.655Z] 404 GET /dashboard/umkm-list?page=1&limit=50&search=&kecamatan=&desa=&jenis_ukm= - Endpoint tidak ditemukan: /dashboard/umkm-list?page=1&limit=50&search=&kecamatan=&desa=&jenis_ukm=
+[2025-11-04T06:00:43.588Z] 404 GET /dashboard/umkm-list?page=1&limit=50&search=danu&kecamatan=&desa=&jenis_ukm= - Endpoint tidak ditemukan: /dashboard/umkm-list?page=1&limit=50&search=danu&kecamatan=&desa=&jenis_ukm=
+[2025-11-04T06:00:44.771Z] 404 GET /dashboard/umkm-summary - Endpoint tidak ditemukan: /dashboard/umkm-summary
+[2025-11-04T06:00:44.793Z] 404 GET /dashboard/umkm-summary - Endpoint tidak ditemukan: /dashboard/umkm-summary
+[2025-11-04T06:00:47.546Z] 404 GET /dashboard/umkm-summary - Endpoint tidak ditemukan: /dashboard/umkm-summary
+[2025-11-04T06:00:47.554Z] 404 GET /dashboard/umkm-summary - Endpoint tidak ditemukan: /dashboard/umkm-summary
+[2025-11-04T06:00:50.345Z] 404 POST /auth/login - Endpoint tidak ditemukan: /auth/login
+[2025-11-04T06:00:52.686Z] 404 POST /auth/login - Endpoint tidak ditemukan: /auth/login
+[2025-11-04T06:01:11.963Z] 404 POST /auth/login - Endpoint tidak ditemukan: /auth/login
+[2025-11-04T06:25:48.660Z] 404 GET //api/dashboard/bantuan-profil?status=tidak-lengkap - Endpoint tidak ditemukan: //api/dashboard/bantuan-profil?status=tidak-lengkap
+[2025-11-04T06:50:59.043Z] 404 GET /api/dashboard/umkm-duplikat-summar - Endpoint tidak ditemukan: /api/dashboard/umkm-duplikat-summar
+[2025-11-04T06:51:01.826Z] 404 GET /api/dashboard/umkm-duplikat-summar - Endpoint tidak ditemukan: /api/dashboard/umkm-duplikat-summar
