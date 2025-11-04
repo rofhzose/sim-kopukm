@@ -1,7 +1,7 @@
 # ==========================================
 # 🧱 Gunakan Node versi stabil
 # ==========================================
-FROM node:20
+FROM node:20-alpine AS base
 
 # ==========================================
 # 📂 Set working directory di container
@@ -14,9 +14,9 @@ WORKDIR /app
 COPY package*.json ./
 
 # ==========================================
-# ⚙️ Install dependencies
+# ⚙️ Install dependencies (hanya production)
 # ==========================================
-RUN npm install --production
+RUN npm ci --omit=dev
 
 # ==========================================
 # 📁 Copy seluruh source code backend
@@ -24,11 +24,17 @@ RUN npm install --production
 COPY . .
 
 # ==========================================
+# 🔒 Pastikan izin file aman
+# ==========================================
+RUN chown -R node:node /app
+USER node
+
+# ==========================================
 # 🌍 Expose port API
 # ==========================================
 EXPOSE 4849
 
 # ==========================================
-# 🚀 Jalankan app
+# 🚀 Jalankan app (tanpa nodemon)
 # ==========================================
-CMD ["npm", "run", "dev"]
+CMD ["node", "server.js"]
