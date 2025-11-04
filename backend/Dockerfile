@@ -1,5 +1,5 @@
 # ==========================================
-# 🧱 Gunakan Node versi stabil
+# 🧱 Gunakan Node versi stabil (ringan + cepat)
 # ==========================================
 FROM node:20-alpine AS base
 
@@ -9,31 +9,35 @@ FROM node:20-alpine AS base
 WORKDIR /app
 
 # ==========================================
-# 📦 Copy file package.json dan package-lock.json
+# ⚙️ Salin file package.json & package-lock.json
 # ==========================================
 COPY package*.json ./
 
 # ==========================================
-# ⚙️ Install dependencies (hanya production)
+# 📦 Install dependencies (tanpa devDependencies)
+# Gunakan retry agar stabil di koneksi VPS
 # ==========================================
-RUN npm ci --omit=dev
+RUN npm config set fetch-retries 5 \
+    && npm config set fetch-retry-factor 2 \
+    && npm config set fetch-retry-maxtimeout 60000 \
+    && npm install --omit=dev
 
 # ==========================================
-# 📁 Copy seluruh source code backend
+# 📁 Copy semua source code backend
 # ==========================================
 COPY . .
 
 # ==========================================
-# ⚙️ Jalankan sebagai user node (aman tanpa chown)
+# ⚙️ Jalankan sebagai user node (tanpa chown berat)
 # ==========================================
 USER node
 
 # ==========================================
-# 🌍 Expose port API
+# 🌍 Expose port backend API
 # ==========================================
 EXPOSE 4849
 
 # ==========================================
-# 🚀 Jalankan app (tanpa nodemon)
+# 🚀 Jalankan aplikasi Node.js
 # ==========================================
 CMD ["node", "server.js"]
