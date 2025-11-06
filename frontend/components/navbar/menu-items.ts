@@ -8,15 +8,20 @@ export interface MenuItem {
 
 export const menuItems: MenuItem[] = [
   { name: "Beranda", href: "/" },
+<<<<<<< HEAD
   
   {
     name: "UMKM", href: "/umkm"
   },
+=======
+
+>>>>>>> 216502ed80c33cbf41a37dfbd9894657796e4d6f
   {
     name: "Informasi",
     subItems: [
       { name: "Profile Dinas", href: "/informasi/profile-dinas" },
-      { name: "Data Awal", href: "/informasi/data-awal" },
+      { name: "Data Awal UMKM", href: "/informasi/data-awal/umkm" },
+            { name: "Data Awal Koperasi", href: "/informasi/data-awal/koperasi" },
       { name: "Bantuan Hukum", href: "/informasi/bantuan-hukum" },
       { name: "Aktifitas", href: "/informasi/-aktifitas" },
       { name: "Prestasi", href: "/informasi/-prestasi" },

@@ -119,26 +119,31 @@ export const HeroHeader = () => {
                   ))}
                 </ul>
               </div>
+<div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
+  <ModeToggle />
 
-              {/* === 🧭 Tombol Mode + Aksi === */}
-              <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                <ModeToggle />
-                <Button asChild variant="outline" size="lg" className={cn(isScrolled && "lg:hidden")}>
-                  <Link href="#">
-                    <span>Login</span>
-                  </Link>
-                </Button>
-                <Button asChild size="lg" className={cn(isScrolled && "lg:hidden")}>
-                  <Link href="#">
-                    <span>Sign Up</span>
-                  </Link>
-                </Button>
-                <Button asChild size="lg" className={cn(isScrolled ? "lg:inline-flex" : "hidden")}>
-                  <Link href="#">
-                    <span> Started</span>
-                  </Link>
-                </Button>
-              </div>
+  {/* Tombol Login */}
+  <Button asChild variant="outline" size="lg" className={cn(isScrolled && "lg:hidden")}>
+    <Link href="/login">
+      <span>Login</span>
+    </Link>
+  </Button>
+
+  {/* Tombol Sign Up */}
+  <Button asChild size="lg" className={cn(isScrolled && "lg:hidden")}>
+    <Link href="/register">
+      <span>Sign Up</span>
+    </Link>
+  </Button>
+
+  {/* Tombol Get Started (desktop only) */}
+  <Button asChild size="lg" className={cn(isScrolled ? "lg:inline-flex" : "hidden")}>
+    <Link href="/login">
+      <span>Get Started</span>
+    </Link>
+  </Button>
+</div>
+
             </div>
           </div>
         </div>
