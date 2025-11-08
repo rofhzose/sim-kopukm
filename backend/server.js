@@ -82,14 +82,18 @@ app.use(limiter);
 // 🔹 CORS Setup (Lokal + Production)
 // =========================
 const allowedOrigins = [
-  "http://localhost:3000",      // Frontend lokal
-  "http://127.0.0.1:3000",      // Local variant
-  "http://api.khfdz.my.id",     // API domain
-  "http://khfdz.my.id",         // Web domain (HTTP)
-  "https://khfdz.my.id",        // Web domain (HTTPS)
-  "http://www.khfdz.my.id",     // ✅ Web domain dengan www (HTTP)
-  "https://www.khfdz.my.id",    // ✅ Web domain dengan www (HTTPS)
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:3001", // ✅ tambahkan ini (penting)
+  "http://127.0.0.1:4849", // ✅ backend sendiri (biar socket juga aman)
+  "http://api.khfdz.my.id",
+  "http://khfdz.my.id",
+  "https://khfdz.my.id",
+  "http://www.khfdz.my.id",
+  "https://www.khfdz.my.id",
 ];
+
 
 
 app.use(

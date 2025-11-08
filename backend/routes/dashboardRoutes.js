@@ -3,7 +3,8 @@ import {
   getUMKMSummary,
   getUMKMList,
   getUMKMDuplikatSummary,
-  getUMKMDuplikatList,
+
+  getUMKMDuplikatByType,
 
 
   getBantuanSummary,
@@ -29,7 +30,8 @@ router.get("/umkm-summary", verifyToken, isSuperAdmin, getUMKMSummary);
 router.get("/umkm-list", verifyToken, isSuperAdmin, getUMKMList);
 router.get("/umkm-filter", verifyToken, isSuperAdmin, getUMKMFilters);
 router.get("/umkm-duplikat-summary", verifyToken, isSuperAdmin, getUMKMDuplikatSummary);
-router.get("/umkm-duplikat-list", verifyToken, isSuperAdmin, getUMKMDuplikatList);
+router.get("/umkm-duplikat-by-type", verifyToken, isSuperAdmin, getUMKMDuplikatByType);
+
 
 router.get("/bantuan-summary", verifyToken, isSuperAdmin, getBantuanSummary);
 router.get("/bantuan-list", verifyToken, isSuperAdmin, getBantuanList);
