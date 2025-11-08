@@ -1010,3 +1010,371 @@ export const getAnalisisTahunan = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+export const getBantuanTidakTerdaftarSummary = async (req, res) => {
+  try {
+    // =====================================================
+    // 1️⃣ Total penerima bantuan tidak terdaftar di tabel UMKM
+    // =====================================================
+    const [[totalTidakTerdaftar]] = await pool.query(`
+      SELECT COUNT(*) AS total_tidak_terdaftar
+      FROM data_bantuan_umkm AS dbu
+      LEFT JOIN data_umkm AS ui 
+        ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
+      WHERE ui.nama IS NULL;
+    `);
+
+    // =====================================================
+    // 2️⃣ Ringkasan tahunan (berapa banyak yang tidak terdaftar per tahun)
+    // =====================================================
+    const [ringkasanTahunan] = await pool.query(`
+      SELECT dbu.tahun, COUNT(*) AS jumlah_tidak_terdaftar
+      FROM data_bantuan_umkm AS dbu
+      LEFT JOIN data_umkm AS ui 
+        ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
+      WHERE ui.nama IS NULL
+      GROUP BY dbu.tahun
+      ORDER BY dbu.tahun ASC;
+    `);
+
+    // =====================================================
+    // 3️⃣ Analisis tahunan bantuan VALID (lengkap & punya PIRT/Halal)
+    // =====================================================
+    const [bantuanValid] = await pool.query(`
+      SELECT tahun, COUNT(*) AS jumlah_bantuan_valid
+      FROM data_bantuan_umkm
+      WHERE nama != '' AND nik != '' AND nama_produk != '' AND
+            nama_umkm != '' AND alamat != '' AND kecamatan != '' AND
+            no_hp != '' AND nib != '' AND jenis_alat_bantu != '' AND
+            tahun != '' AND keterangan != ''
+            AND (UPPER(no_pirt) LIKE 'PIRT%' OR UPPER(no_pirt) LIKE 'P-IRT%' OR UPPER(no_pirt) LIKE 'P IRT%')
+            AND (no_halal NOT LIKE '0' AND no_halal NOT LIKE '-' AND no_halal != '')
+      GROUP BY tahun ORDER BY tahun ASC;
+    `);
+
+    // =====================================================
+    // 4️⃣ Distribusi jenis bantuan per tahun
+    // =====================================================
+    const [distribusiBantuan] = await pool.query(`
+      SELECT tahun, jenis_alat_bantu, COUNT(*) AS jumlah_penerima
+      FROM data_bantuan_umkm
+      WHERE jenis_alat_bantu != ''
+      GROUP BY tahun, jenis_alat_bantu
+      ORDER BY tahun ASC, jumlah_penerima DESC;
+    `);
+
+    // =====================================================
+    // 5️⃣ Penerima bantuan 1x dan yang ganda
+    // =====================================================
+    const [[total1x]] = await pool.query(`
+      SELECT COUNT(*) AS total_1x
+      FROM (
+        SELECT nama, nik, COUNT(*) AS jumlah_bantuan
+        FROM data_bantuan_umkm
+        GROUP BY nama, nik
+        HAVING COUNT(*) = 1
+      ) AS x;
+    `);
+
+    const [[totalGanda]] = await pool.query(`
+      SELECT COUNT(*) AS total_ganda
+      FROM (
+        SELECT nama, nik, COUNT(*) AS jumlah_bantuan
+        FROM data_bantuan_umkm
+        GROUP BY nama, nik
+        HAVING COUNT(*) > 1
+      ) AS y;
+    `);
+
+    // =====================================================
+    // 🔚 Respons ringkas & analitik
+    // =====================================================
+    res.json({
+      success: true,
+      data: {
+        total_tidak_terdaftar: totalTidakTerdaftar.total_tidak_terdaftar,
+        ringkasan_tahunan: ringkasanTahunan,
+        analisis_tahunan: {
+          valid: bantuanValid.length,
+          distribusi: distribusiBantuan.length,
+        },
+        duplikasi: {
+          penerima_1x: total1x.total_1x,
+          penerima_ganda: totalGanda.total_ganda,
+        },
+        analisis: {
+          keterangan:
+            "Data ini menganalisis penerima bantuan yang belum tercatat sebagai UMKM terdaftar di sistem, serta distribusi bantuan berdasarkan tahun, validitas profil, dan pola penerimaan bantuan.",
+          sumber_data: ["data_bantuan_umkm", "data_umkm"],
+          dasar_perhitungan: {
+            total_tidak_terdaftar:
+              "Jumlah penerima bantuan yang belum ditemukan di tabel data_umkm (pencocokan berbasis nama).",
+            ringkasan_tahunan:
+              "Distribusi jumlah penerima bantuan tidak terdaftar per tahun.",
+            analisis_tahunan:
+              "Menampilkan tren bantuan lengkap dan valid berdasarkan kelengkapan data (PIRT dan Halal).",
+            duplikasi:
+              "Menunjukkan jumlah penerima bantuan satu kali dan yang menerima lebih dari satu kali (ganda).",
+          },
+          catatan:
+            "Data ini membantu mengidentifikasi potensi UMKM penerima bantuan yang belum terdaftar resmi di database utama untuk verifikasi dan pembaruan data di kemudian hari.",
+        },
+      },
+    });
+  } catch (err) {
+    console.error("❌ getBantuanTidakTerdaftarSummary:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Gagal mengambil data ringkasan bantuan tidak terdaftar.",
+      error: err.message,
+    });
+  }
+};
+
+export const getBantuanTidakTerdaftarList = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 50,
+      search = "",
+      tahun = "",
+      kecamatan = "",
+      jenis_alat_bantu = "",
+      penerima = "semua", // semua | satu_kali | ganda
+    } = req.query;
+
+    const offset = (page - 1) * limit;
+    const params = [];
+
+    // ==========================================================
+    // Base Query
+    // ==========================================================
+    let sql = `
+      SELECT DISTINCT
+        dbu.id,
+        dbu.nama,
+        dbu.nik,
+        dbu.nama_produk,
+        dbu.nama_umkm,
+        dbu.alamat,
+        dbu.kecamatan,
+        dbu.no_hp,
+        dbu.nib,
+        dbu.no_pirt,
+        dbu.no_halal,
+        dbu.jenis_alat_bantu,
+        dbu.tahun,
+        dbu.keterangan,
+        COUNT(dbu.nama) OVER (PARTITION BY dbu.nama, dbu.nik) AS jumlah_bantuan
+      FROM data_bantuan_umkm AS dbu
+      LEFT JOIN data_umkm AS ui 
+        ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
+      WHERE ui.id IS NULL
+        AND dbu.nama IS NOT NULL AND TRIM(dbu.nama) <> ''
+    `;
+
+    // 🔍 Filter umum
+    if (search) {
+      sql += ` AND (
+        dbu.nama LIKE ? OR 
+        dbu.nama_umkm LIKE ? OR 
+        dbu.nama_produk LIKE ? OR 
+        dbu.kecamatan LIKE ?
+      )`;
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    if (kecamatan) {
+      sql += ` AND dbu.kecamatan = ?`;
+      params.push(kecamatan);
+    }
+
+    if (tahun) {
+      sql += ` AND dbu.tahun = ?`;
+      params.push(tahun);
+    }
+
+    if (jenis_alat_bantu) {
+      sql += ` AND dbu.jenis_alat_bantu = ?`;
+      params.push(jenis_alat_bantu);
+    }
+
+    // ==========================================================
+    // 🧩 Filter penerima (1x / ganda)
+    // ==========================================================
+    if (penerima === "satu_kali") {
+      sql += `
+        AND dbu.nama IN (
+          SELECT nama FROM (
+            SELECT dbu2.nama
+            FROM data_bantuan_umkm AS dbu2
+            LEFT JOIN data_umkm AS ui2
+              ON TRIM(UPPER(dbu2.nama)) = TRIM(UPPER(ui2.nama))
+            WHERE ui2.id IS NULL
+            GROUP BY dbu2.nama
+            HAVING COUNT(*) = 1
+          ) AS sub
+        )
+      `;
+    } else if (penerima === "ganda") {
+      sql += `
+        AND dbu.nama IN (
+          SELECT nama FROM (
+            SELECT dbu3.nama
+            FROM data_bantuan_umkm AS dbu3
+            LEFT JOIN data_umkm AS ui3
+              ON TRIM(UPPER(dbu3.nama)) = TRIM(UPPER(ui3.nama))
+            WHERE ui3.id IS NULL
+            GROUP BY dbu3.nama
+            HAVING COUNT(*) > 1
+          ) AS sub
+        )
+      `;
+    }
+
+    sql += ` ORDER BY dbu.tahun DESC, dbu.kecamatan ASC LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [rows] = await pool.query(sql, params);
+
+    // ==========================================================
+    // 🧮 Hitung total data
+    // ==========================================================
+    let countSql = `
+      SELECT COUNT(DISTINCT dbu.id) AS total
+      FROM data_bantuan_umkm AS dbu
+      LEFT JOIN data_umkm AS ui 
+        ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
+      WHERE ui.id IS NULL
+        AND dbu.nama IS NOT NULL AND TRIM(dbu.nama) <> ''
+    `;
+    const countParams = [];
+
+    if (search) {
+      countSql += ` AND (
+        dbu.nama LIKE ? OR 
+        dbu.nama_umkm LIKE ? OR 
+        dbu.nama_produk LIKE ? OR 
+        dbu.kecamatan LIKE ?
+      )`;
+      countParams.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    if (kecamatan) {
+      countSql += ` AND dbu.kecamatan = ?`;
+      countParams.push(kecamatan);
+    }
+
+    if (tahun) {
+      countSql += ` AND dbu.tahun = ?`;
+      countParams.push(tahun);
+    }
+
+    if (jenis_alat_bantu) {
+      countSql += ` AND dbu.jenis_alat_bantu = ?`;
+      countParams.push(jenis_alat_bantu);
+    }
+
+    if (penerima === "satu_kali") {
+      countSql += `
+        AND dbu.nama IN (
+          SELECT nama FROM (
+            SELECT dbu2.nama
+            FROM data_bantuan_umkm AS dbu2
+            LEFT JOIN data_umkm AS ui2
+              ON TRIM(UPPER(dbu2.nama)) = TRIM(UPPER(ui2.nama))
+            WHERE ui2.id IS NULL
+            GROUP BY dbu2.nama
+            HAVING COUNT(*) = 1
+          ) AS sub
+        )
+      `;
+    } else if (penerima === "ganda") {
+      countSql += `
+        AND dbu.nama IN (
+          SELECT nama FROM (
+            SELECT dbu3.nama
+            FROM data_bantuan_umkm AS dbu3
+            LEFT JOIN data_umkm AS ui3
+              ON TRIM(UPPER(dbu3.nama)) = TRIM(UPPER(ui3.nama))
+            WHERE ui3.id IS NULL
+            GROUP BY dbu3.nama
+            HAVING COUNT(*) > 1
+          ) AS sub
+        )
+      `;
+    }
+
+    const [[{ total }]] = await pool.query(countSql, countParams);
+
+    // ==========================================================
+    // 📦 Response
+    // ==========================================================
+    res.json({
+      success: true,
+      total,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+      },
+      data: rows,
+    });
+  } catch (err) {
+    console.error("❌ getBantuanTidakTerdaftarList:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Gagal mengambil daftar bantuan tidak terdaftar.",
+      error: err.message,
+    });
+  }
+};
+
+export const getBantuanTidakTerdaftarFilters = async (req, res) => {
+  try {
+    // Ambil daftar filter distinct dari data yang TIDAK TERDAFTAR
+    const [tahunRows] = await pool.query(`
+      SELECT DISTINCT dbu.tahun 
+      FROM data_bantuan_umkm AS dbu
+      LEFT JOIN data_umkm AS ui
+        ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
+      WHERE ui.id IS NULL AND dbu.tahun IS NOT NULL AND dbu.tahun <> ''
+      ORDER BY dbu.tahun DESC
+    `);
+
+    const [kecamatanRows] = await pool.query(`
+      SELECT DISTINCT dbu.kecamatan 
+      FROM data_bantuan_umkm AS dbu
+      LEFT JOIN data_umkm AS ui
+        ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
+      WHERE ui.id IS NULL AND dbu.kecamatan IS NOT NULL AND dbu.kecamatan <> ''
+      ORDER BY dbu.kecamatan ASC
+    `);
+
+    const [jenisRows] = await pool.query(`
+      SELECT DISTINCT dbu.jenis_alat_bantu 
+      FROM data_bantuan_umkm AS dbu
+      LEFT JOIN data_umkm AS ui
+        ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
+      WHERE ui.id IS NULL AND dbu.jenis_alat_bantu IS NOT NULL AND dbu.jenis_alat_bantu <> ''
+      ORDER BY dbu.jenis_alat_bantu ASC
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        tahun: tahunRows.map((r) => r.tahun),
+        kecamatan: kecamatanRows.map((r) => r.kecamatan),
+        jenis_alat_bantu: jenisRows.map((r) => r.jenis_alat_bantu),
+      },
+    });
+  } catch (err) {
+    console.error("❌ getBantuanTidakTerdaftarFilters:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Gagal memuat data filter bantuan tidak terdaftar.",
+      error: err.message,
+    });
+  }
+};

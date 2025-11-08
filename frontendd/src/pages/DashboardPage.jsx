@@ -2,6 +2,7 @@ import React from "react";
 import UMKMSummary from "../components/UMKMSummary";
 import BantuanSummary from "../components/UMKMBantuan";
 import UMKMDuplikatSummary from "../components/UMKMDuplikat";
+import UMKMBantuanTidakTerdaftarSummary from "../components/UMKMBantuanTidakTerdaftarSummary";
 
 export default function DashboardPage() {
   return (
@@ -32,7 +33,12 @@ export default function DashboardPage() {
         <BantuanSummary />
       </section>
 
-
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">
+          Statistik Data Bantuan Tidak Terdaftar
+        </h2>
+        <UMKMBantuanTidakTerdaftarSummary />
+      </section>
 
 
       
