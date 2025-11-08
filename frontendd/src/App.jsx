@@ -6,6 +6,7 @@ import DashboardPage from "./pages/DashboardPage";
 import UmkmPage from "./pages/UMKMPage";
 import BantuanPage from "./pages/BantuanPage";
 import DuplikatPage from "./pages/DuplikatPage"
+import BantuanTidakTerdaftarPage from "./pages/BantuanTidakTerdaftarPage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/umkm" element={<UmkmPage />} />
         <Route path="/bantuan" element={<BantuanPage />} />
         <Route path="/duplikat" element={<DuplikatPage />} />
+        <Route path="/bantuan-tidak-terdaftar" element={<BantuanTidakTerdaftarPage />} />
       </Routes>
     </BrowserRouter>
   );

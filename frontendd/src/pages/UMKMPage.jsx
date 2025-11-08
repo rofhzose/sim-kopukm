@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
-import TableUMKM from "../components/UMKMTable";
+import TableUMKM from "../components/SummaryTable";
 
 export default function UMKMPage() {
   const [data, setData] = useState([]);

@@ -3,7 +3,8 @@ import {
   getUMKMSummary,
   getUMKMList,
   getUMKMDuplikatSummary,
-  getUMKMDuplikatList,
+
+  getUMKMDuplikatByType,
 
 
   getBantuanSummary,
@@ -15,6 +16,11 @@ import {
 
   
   getBantuanTidakTerdaftar,
+
+  getBantuanTidakTerdaftarSummary,
+  getBantuanTidakTerdaftarList,
+  getBantuanTidakTerdaftarFilters,
+
   getAnalisisTahunan,
   getUMKMFilters,
 
@@ -29,11 +35,16 @@ router.get("/umkm-summary", verifyToken, isSuperAdmin, getUMKMSummary);
 router.get("/umkm-list", verifyToken, isSuperAdmin, getUMKMList);
 router.get("/umkm-filter", verifyToken, isSuperAdmin, getUMKMFilters);
 router.get("/umkm-duplikat-summary", verifyToken, isSuperAdmin, getUMKMDuplikatSummary);
-router.get("/umkm-duplikat-list", verifyToken, isSuperAdmin, getUMKMDuplikatList);
+router.get("/umkm-duplikat-by-type", verifyToken, isSuperAdmin, getUMKMDuplikatByType);
+
 
 router.get("/bantuan-summary", verifyToken, isSuperAdmin, getBantuanSummary);
 router.get("/bantuan-list", verifyToken, isSuperAdmin, getBantuanList);
 router.get("/bantuan-filter", verifyToken, isSuperAdmin, getBantuanFilters);
+
+router.get("/bantuan-tidak-terdaftar-summary", verifyToken, isSuperAdmin, getBantuanTidakTerdaftarSummary);
+router.get("/bantuan-tidak-terdaftar-list", verifyToken, isSuperAdmin, getBantuanTidakTerdaftarList);
+router.get("/bantuan-tidak-terdaftar-filters", verifyToken, isSuperAdmin, getBantuanTidakTerdaftarFilters);
 
 router.get("/bantuan-profil", verifyToken, isSuperAdmin, getBantuanProfil);
 router.get("/bantuan-tidak-terdaftar", verifyToken, isSuperAdmin, getBantuanTidakTerdaftar);

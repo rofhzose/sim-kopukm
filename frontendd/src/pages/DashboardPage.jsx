@@ -1,7 +1,8 @@
 import React from "react";
 import UMKMSummary from "../components/UMKMSummary";
-import BantuanSummary from "../components/BantuanSummary";
+import BantuanSummary from "../components/UMKMBantuan";
 import UMKMDuplikatSummary from "../components/UMKMDuplikat";
+import UMKMBantuanTidakTerdaftarSummary from "../components/UMKMBantuanTidakTerdaftarSummary";
 
 export default function DashboardPage() {
   return (
@@ -18,6 +19,12 @@ export default function DashboardPage() {
         <UMKMSummary />
       </section>
 
+            <section>
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">
+          Statistik Terindikasi Duplikat
+        </h2>
+        <UMKMDuplikatSummary />
+      </section>
       {/* Bantuan Section */}
       <section>
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
@@ -26,13 +33,12 @@ export default function DashboardPage() {
         <BantuanSummary />
       </section>
 
-            <section>
+      <section className="mb-10">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
-          Statistik Terindikasi Duplikat
+          Statistik Data Bantuan Tidak Terdaftar
         </h2>
-        <UMKMDuplikatSummary />
+        <UMKMBantuanTidakTerdaftarSummary />
       </section>
-
 
 
       
