@@ -1,7 +1,65 @@
 import React, { useEffect, useState } from "react";
-import axiosInstance from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../utils/axiosInstance"; 
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
+  ResponsiveContainer, PieChart, Pie, Cell
+} from "recharts";
+import { TrendingUp, Users, CheckCircle, AlertCircle, Activity, FileText, Building2 } from "lucide-react";
 
+// =========================
+// CARD STATISTIK
+// =========================
+const StatCard = ({ icon: Icon, title, value, color, bgColor, percentage }) => (
+  <div className={`bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-2 ${color}`}>
+    <div className="flex items-start justify-between">
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-3">
+          <div className={`${bgColor} p-2 rounded-lg`}>
+            <Icon className={`w-5 h-5 ${color.replace('border-', 'text-')}`} />
+          </div>
+          <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">{title}</p>
+        </div>
+        <p className={`text-4xl font-bold ${color.replace('border-', 'text-')} mb-2`}>
+          {value?.toLocaleString("id-ID")}
+        </p>
+        {percentage && (
+          <div className="flex items-center gap-1 mt-2">
+            <div className="bg-green-100 px-2 py-1 rounded-md flex items-center gap-1">
+              <TrendingUp className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-600">{percentage}%</span>
+            </div>
+            <span className="text-xs text-gray-500">dari total</span>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+// =========================
+// CHART CARD
+// =========================
+const ChartCard = ({ title, children, description, icon: Icon }) => (
+  <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200">
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-2">
+        {Icon && (
+          <div className="bg-blue-100 p-2 rounded-lg">
+            <Icon className="w-5 h-5 text-blue-600" />
+          </div>
+        )}
+        <h3 className="text-xl font-bold text-gray-800">{title}</h3>
+      </div>
+      {description && <p className="text-sm text-gray-500 ml-9">{description}</p>}
+    </div>
+    {children}
+  </div>
+);
+
+// =========================
+// PAGE UTAMA
+// =========================
 export default function UMKMSummary() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -9,123 +67,289 @@ export default function UMKMSummary() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSummary = async () => {
       try {
         const res = await axiosInstance.get("/dashboard/umkm-summary");
+
         if (res.data?.success) {
           setData(res.data.data);
         } else {
           setError("Gagal memuat data UMKM summary.");
         }
       } catch (err) {
-        console.error("❌ Error fetching data:", err);
-        setError("Tidak dapat terhubung ke API.");
+        console.error(err);
+        setError("Tidak dapat menghubungi API.");
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+
+    fetchSummary();
   }, []);
 
-  // 🔄 Loader
+  // ===========================
+  // LOADING STATE
+  // ===========================
   if (loading) {
     return (
-      <div className="flex flex-col items-center text-gray-600 mt-10 animate-pulse">
-        <span className="text-2xl">🔄</span>
-        <p className="mt-2 text-sm">Memuat data UMKM...</p>
+      <div className="flex flex-col items-center justify-center h-96">
+        <div className="relative">
+          <div className="w-20 h-20 border-4 border-blue-100 rounded-full"></div>
+          <div className="w-20 h-20 border-4 border-blue-600 rounded-full animate-spin border-t-transparent absolute top-0 left-0"></div>
+        </div>
+        <p className="mt-4 text-gray-600 font-semibold">Memuat data dashboard...</p>
       </div>
     );
   }
 
-  // ❌ Error handling
+  // ===========================
+  // ERROR STATE
+  // ===========================
   if (error) {
     return (
-      <div className="text-red-500 text-center mt-10 font-medium">
-        ❌ {error}
+      <div className="bg-red-50 border-2 border-red-500 p-6 rounded-xl">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-6 h-6 text-red-600" />
+          <p className="text-red-600 font-semibold">{error}</p>
+        </div>
       </div>
     );
   }
 
-  const analisis = data?.analisis || {};
+  // ===========================
+  // HITUNG PERSENTASE
+  // ===========================
+  const percentage_lengkap = ((data.total_lengkap / data.total_umkm) * 100).toFixed(1);
+  const percentage_belum = ((data.total_belum_lengkap / data.total_umkm) * 100).toFixed(1);
 
-  // ✅ Tampilan utama
+  // ===========================
+  // DATA CHART
+  // ===========================
+  const pieData = [
+    { name: "Data Lengkap", value: data.total_lengkap, color: "#10b981" },
+    { name: "Data Belum Lengkap", value: data.total_belum_lengkap, color: "#f59e0b" }
+  ];
+
+  const chartKecamatan = data.per_kecamatan?.map((item) => ({
+    kecamatan: item.kecamatan,
+    total: item.total
+  })) || [];
+
+  const chartJenis = data.per_jenis_ukm?.map((item) => ({
+    jenis: item.jenis,
+    total: item.total
+  })) || [];
+
+  const nibData = [
+    { name: "Punya NIB", value: Number(data.status_nib.punya), color: "#3b82f6" },
+    { name: "Belum Punya NIB", value: Number(data.status_nib.belum), color: "#ef4444" }
+  ];
+
+  // ===========================
+  // RENDER PAGE
+  // ===========================
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-6xl px-4">
-      <h1 className="text-2xl font-bold text-gray-800 mt-6 mb-2">
-        🏢 Ringkasan Data UMKM Terdaftar
-      </h1>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
 
-      {/* === GRID CARD === */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
-        {/* Total UMKM */}
-        <div className="bg-white shadow-md rounded-xl p-6 border border-blue-100 text-center hover:shadow-lg hover:scale-[1.02] transition">
-          <h2 className="text-lg text-gray-600 font-medium mb-1">Total UMKM</h2>
-          <p className="text-4xl font-bold text-blue-600">
-            {data?.total_umkm?.toLocaleString("id-ID") ?? 0}
-          </p>
+        {/* HEADER */}
+        <div className="mb-8 bg-white rounded-xl p-6 shadow-md border border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-3 rounded-xl">
+              <Activity className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800">
+                Dashboard UMKM
+              </h1>
+              <p className="text-gray-600 text-sm mt-1">Ringkasan data dan analisis UMKM terdaftar</p>
+            </div>
+          </div>
         </div>
 
-        {/* Data Lengkap */}
-        <div className="bg-white shadow-md rounded-xl p-6 border border-green-100 text-center hover:shadow-lg hover:scale-[1.02] transition">
-          <h2 className="text-lg text-gray-600 font-medium mb-1">Data Lengkap</h2>
-          <p className="text-4xl font-bold text-green-600">
-            {data?.total_lengkap?.toLocaleString("id-ID") ?? 0}
-          </p>
+        {/* STAT CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <StatCard 
+            icon={Users} 
+            title="Total UMKM" 
+            value={data.total_umkm} 
+            color="border-blue-600" 
+            bgColor="bg-blue-100"
+          />
+          <StatCard 
+            icon={CheckCircle} 
+            title="Data Lengkap" 
+            value={data.total_lengkap} 
+            percentage={percentage_lengkap} 
+            color="border-green-600" 
+            bgColor="bg-green-100"
+          />
+          <StatCard 
+            icon={AlertCircle} 
+            title="Belum Lengkap" 
+            value={data.total_belum_lengkap} 
+            percentage={percentage_belum} 
+            color="border-yellow-600" 
+            bgColor="bg-yellow-100"
+          />
         </div>
 
-        {/* Data Belum Lengkap */}
-        <div className="bg-white shadow-md rounded-xl p-6 border border-yellow-100 text-center hover:shadow-lg hover:scale-[1.02] transition">
-          <h2 className="text-lg text-gray-600 font-medium mb-1">
-            Data Belum Lengkap
-          </h2>
-          <p className="text-4xl font-bold text-yellow-600">
-            {data?.total_belum_lengkap?.toLocaleString("id-ID") ?? 0}
-          </p>
+        {/* ANALISIS DATA */}
+        <ChartCard title="Analisis Data & Penjelasan" icon={FileText}>
+          <div className="space-y-4 text-gray-700 leading-relaxed">
+            
+            {/* Keterangan */}
+            <p className="text-base">{data.analisis.keterangan}</p>
+
+            {/* Dasar Perhitungan */}
+            <div className="bg-gray-50 p-5 rounded-xl border-2 border-gray-200">
+              <h4 className="font-bold text-gray-800 mb-3 text-lg">📊 Dasar Perhitungan</h4>
+              <div className="space-y-3">
+                <div className="flex items-start gap-2">
+                  <div className="bg-blue-600 w-1.5 h-1.5 rounded-full mt-2"></div>
+                  <div>
+                    <p className="font-semibold text-gray-800">Total UMKM</p>
+                    <p className="text-sm text-gray-600">{data.analisis.dasar_perhitungan.total_umkm}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="bg-green-600 w-1.5 h-1.5 rounded-full mt-2"></div>
+                  <div>
+                    <p className="font-semibold text-gray-800">Data Lengkap</p>
+                    <p className="text-sm text-gray-600">{data.analisis.dasar_perhitungan.total_lengkap}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="bg-yellow-600 w-1.5 h-1.5 rounded-full mt-2"></div>
+                  <div>
+                    <p className="font-semibold text-gray-800">Data Belum Lengkap</p>
+                    <p className="text-sm text-gray-600">{data.analisis.dasar_perhitungan.total_belum_lengkap}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Catatan */}
+            <div className="bg-blue-50 p-5 rounded-xl border-2 border-blue-200">
+              <div className="flex items-start gap-2">
+                <span className="text-2xl">📝</span>
+                <div>
+                  <p className="font-bold text-blue-800 mb-1">Catatan Penting</p>
+                  <p className="text-sm text-gray-700">{data.analisis.catatan}</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </ChartCard>
+
+        {/* CHARTS ROW 1 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-8">
+
+          {/* PIE -> Kelengkapan */}
+          <ChartCard title="Distribusi Kelengkapan Data" icon={Activity}>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                >
+                  {pieData.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(v) => v.toLocaleString("id-ID")} />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          {/* PIE -> Status NIB */}
+          <ChartCard title="Status Kepemilikan NIB" icon={FileText}>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={nibData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                  dataKey="value"
+                >
+                  {nibData.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(v) => v.toLocaleString("id-ID")} />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
         </div>
+
+        {/* BAR CHART KECAMATAN */}
+        <div className="mb-8">
+          <ChartCard title="Sebaran UMKM per Kecamatan" icon={Building2}>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={chartKecamatan}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="kecamatan" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '2px solid #3b82f6',
+                    borderRadius: '8px',
+                    fontWeight: 600
+                  }} 
+                  formatter={(v) => v.toLocaleString("id-ID")}
+                />
+                <Legend />
+                <Bar dataKey="total" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* BAR CHART JENIS UKM */}
+        <div className="mb-8">
+          <ChartCard title="Sebaran UMKM berdasarkan Jenis UKM" icon={Activity}>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={chartJenis}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="jenis" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '2px solid #10b981',
+                    borderRadius: '8px',
+                    fontWeight: 600
+                  }} 
+                  formatter={(v) => v.toLocaleString("id-ID")}
+                />
+                <Legend />
+                <Bar dataKey="total" fill="#10b981" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* BUTTON */}
+        <div className="flex justify-center">
+          <button
+            onClick={() => navigate("/umkm")}
+            className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-xl flex items-center gap-3"
+          >
+            <FileText className="w-5 h-5" />
+            Lihat Data UMKM Lengkap
+          </button>
+        </div>
+
       </div>
-
-      {/* === PENJELASAN === */}
-      <div className="bg-white shadow-md rounded-xl p-6 mt-8 w-full text-gray-700 border border-gray-100">
-        <h3 className="text-xl font-semibold text-gray-800 mb-3">
-          🧠 Penjelasan Singkat
-        </h3>
-
-        <p className="text-gray-700 leading-relaxed mb-3">
-          {analisis.keterangan ||
-            "Data ini menunjukkan total UMKM yang terdaftar di sistem serta tingkat kelengkapan datanya."}
-        </p>
-
-        <ul className="list-disc list-inside text-gray-700 space-y-1">
-          <li>
-            <strong>Total UMKM:</strong>{" "}
-            {analisis.dasar_perhitungan?.total_umkm ||
-              "Jumlah seluruh UMKM yang tercatat di sistem database."}
-          </li>
-          <li>
-            <strong>Data Lengkap:</strong>{" "}
-            {analisis.dasar_perhitungan?.total_lengkap ||
-              "Jumlah UMKM yang sudah mengisi semua kolom penting seperti nama, alamat, lokasi, dan NIB."}
-          </li>
-          <li>
-            <strong>Data Belum Lengkap:</strong>{" "}
-            {analisis.dasar_perhitungan?.total_belum_lengkap ||
-              "Jumlah UMKM yang masih ada kolom kosong atau belum terisi dengan lengkap."}
-          </li>
-        </ul>
-
-        <p className="text-sm text-gray-500 mt-3 italic">
-          📝 {analisis.catatan ||
-            "Kolom yang diperiksa meliputi nama, jenis kelamin, usaha, alamat, kecamatan, desa, longitude, latitude, jenis UKM, dan NIB."}
-        </p>
-      </div>
-
-      {/* === TOMBOL === */}
-      <button
-        onClick={() => navigate("/umkm")}
-        className="mt-6 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-md"
-      >
-        📋 Lihat Data UMKM
-      </button>
     </div>
   );
 }

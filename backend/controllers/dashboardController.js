@@ -5,52 +5,82 @@ import pool from "../config/db.js";
 ================================================================ */
 export const getUMKMSummary = async (req, res) => {
   try {
-    // 🔹 Total seluruh UMKM
+    // 🔹 Total UMKM
     const [[jumlahUmkm]] = await pool.query(`
       SELECT COUNT(*) AS total_umkm FROM data_umkm;
     `);
 
-    // 🔹 UMKM yang datanya belum lengkap (ada kolom kosong/null penting)
+    // 🔹 UMKM belum lengkap (ada data hilang)
     const [[belumLengkap]] = await pool.query(`
       SELECT COUNT(*) AS total_belum_lengkap
       FROM data_umkm
       WHERE 
-        nama = '' OR nama IS NULL OR
-        jenis_kelamin = '' OR jenis_kelamin IS NULL OR
-        nama_usaha = '' OR nama_usaha IS NULL OR
-        alamat = '' OR alamat IS NULL OR
-        kecamatan = '' OR kecamatan IS NULL OR
-        desa = '' OR desa IS NULL OR
-        longitude = '' OR longitude IS NULL OR
-        latitude = '' OR latitude IS NULL OR
-        jenis_ukm = '' OR jenis_ukm IS NULL OR
-        nib = '' OR nib IS NULL;
+        nama IS NULL OR nama = '' OR
+        jenis_kelamin IS NULL OR jenis_kelamin = '' OR
+        nama_usaha IS NULL OR nama_usaha = '' OR
+        alamat IS NULL OR alamat = '' OR
+        kecamatan IS NULL OR kecamatan = '' OR
+        desa IS NULL OR desa = '' OR
+        longitude IS NULL OR longitude = '' OR
+        latitude IS NULL OR latitude = '' OR
+        jenis_ukm IS NULL OR jenis_ukm = '' OR
+        nib IS NULL OR nib = '';
     `);
 
-    // 🔹 UMKM yang lengkap
+    // 🔹 Total UMKM lengkap
     const totalLengkap = jumlahUmkm.total_umkm - belumLengkap.total_belum_lengkap;
 
-    // 🔹 Kirim hasil
+    // 🔹 UMKM per kecamatan
+    const [perKecamatan] = await pool.query(`
+      SELECT kecamatan, COUNT(*) AS total
+      FROM data_umkm
+      GROUP BY kecamatan
+      ORDER BY total DESC;
+    `);
+
+    // 🔹 UMKM per jenis UKM
+    const [perJenisUkm] = await pool.query(`
+      SELECT jenis_ukm AS jenis, COUNT(*) AS total
+      FROM data_umkm
+      GROUP BY jenis_ukm
+      ORDER BY total DESC;
+    `);
+
+    // 🔹 Status NIB (punya / belum)
+    const [[statusNib]] = await pool.query(`
+      SELECT
+        SUM(CASE WHEN nib IS NOT NULL AND nib <> '' THEN 1 ELSE 0 END) AS punya,
+        SUM(CASE WHEN nib IS NULL OR nib = '' THEN 1 ELSE 0 END) AS belum
+      FROM data_umkm;
+    `);
+
+    // 🔹 Response JSON
     res.json({
       success: true,
       data: {
         total_umkm: jumlahUmkm.total_umkm,
         total_lengkap: totalLengkap,
         total_belum_lengkap: belumLengkap.total_belum_lengkap,
+
+        // 📊 Tambahan chart
+        per_kecamatan: perKecamatan,
+        per_jenis_ukm: perJenisUkm,
+        status_nib: statusNib,
+
         analisis: {
           keterangan:
-            "Data ini menunjukkan total UMKM yang terdaftar serta kelengkapan datanya berdasarkan pengisian kolom penting seperti nama, alamat, lokasi, dan NIB.",
+            "Data ini menunjukkan total UMKM yang terdaftar serta kelengkapan datanya berdasarkan pengisian kolom penting.",
           sumber_data: ["data_umkm"],
           dasar_perhitungan: {
             total_umkm:
               "Jumlah seluruh UMKM yang tercatat di tabel data_umkm.",
             total_lengkap:
-              "Jumlah UMKM yang sudah mengisi semua kolom penting (nama, usaha, alamat, kecamatan, desa, lokasi, jenis UKM, dan NIB).",
+              "UMKM yang sudah mengisi semua kolom penting.",
             total_belum_lengkap:
-              "Jumlah UMKM yang masih memiliki kolom kosong atau belum diisi dengan lengkap."
+              "UMKM yang masih memiliki kolom kosong atau belum diisi dengan lengkap."
           },
           catatan:
-            "Kolom yang diperiksa antara lain: nama, jenis_kelamin, nama_usaha, alamat, kecamatan, desa, longitude, latitude, jenis_ukm, dan nib."
+            "Kolom diperiksa: nama, jenis_kelamin, nama_usaha, alamat, kecamatan, desa, longitude, latitude, jenis_ukm, nib."
         }
       }
     });
@@ -63,6 +93,7 @@ export const getUMKMSummary = async (req, res) => {
     });
   }
 };
+
 
 
 
