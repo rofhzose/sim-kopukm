@@ -3,3 +3,11 @@
 [2025-11-15T07:21:27.885Z] 500 OPTIONS /api/auth/login - Not allowed by CORS
 [2025-11-15T07:21:28.635Z] 500 OPTIONS /api/auth/login - Not allowed by CORS
 [2025-11-15T08:12:59.650Z] 500 OPTIONS /api/auth/login - Not allowed by CORS
+[2025-11-15T11:23:42.342Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-15T11:23:42.347Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-15T11:24:15.635Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-15T11:24:15.639Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-15T11:24:19.118Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-15T11:24:19.121Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-15T11:49:22.232Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-15T11:49:22.235Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
