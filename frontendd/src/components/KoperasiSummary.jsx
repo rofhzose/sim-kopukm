@@ -262,7 +262,7 @@ export default function KoperasiSummary() {
         {/* PER KEUANGAN */}
         <div className="mb-6">
           <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
-            <h4 className="font-bold mb-3">Status Keuangan (rade_koperasi)</h4>
+            <h4 className="font-bold mb-3">Grade Koperasi</h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {perKeuangan.map((k) => (
                 <div key={k.kondisi_keuangan} className="p-3 rounded-lg bg-gray-50 border">

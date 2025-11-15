@@ -110,7 +110,7 @@ export const getKoperasiSummary = async (req, res) => {
           WHEN UPPER(TRIM(grade_koperasi)) = 'A' THEN 'Sehat'
           WHEN UPPER(TRIM(grade_koperasi)) = 'B' THEN 'Prihatin'
           WHEN UPPER(TRIM(grade_koperasi)) = 'C' THEN 'Gagal'
-          ELSE 'Unknown'
+          ELSE 'Tidak Diketahui'
         END AS kondisi_keuangan,
         COUNT(*) AS total
       FROM data_koperasi
