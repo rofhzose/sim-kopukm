@@ -14,6 +14,7 @@ import hpp from "hpp";
 import pool from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import koperasiRoute from "./routes/koperasiRoutes.js";
 
 // =========================
 // 🔹 Konfigurasi awal
@@ -135,6 +136,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/dashboard", koperasiRoute);
+
 
 // =========================
 // 🔹 Handler 404

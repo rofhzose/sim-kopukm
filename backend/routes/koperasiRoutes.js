@@ -1,9 +1,14 @@
 import express from "express";
-import { mergeKoperasiData } from "../controllers/koperasiGlobalController.js";
+import { 
+  getKoperasiSummary, 
+  getKoperasiDuplikat, 
+  getKoperasiDuplikatDetails 
+} from "../controllers/koperasiController.js";
 
 const router = express.Router();
 
-// Endpoint merge data ke koperasi_global
-router.post("/merge", mergeKoperasiData);
+router.get("/koperasi-summary", getKoperasiSummary);
+router.get("/koperasi-duplikat", getKoperasiDuplikat);
+router.get("/koperasi-duplikat/details", getKoperasiDuplikatDetails);
 
 export default router;

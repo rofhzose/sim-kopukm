@@ -14,78 +14,33 @@ import {
   Legend,
   Bar,
 } from "recharts";
-import { Users, Banknote, FileText, AlertCircle, Activity } from "lucide-react";
-
-/**
- * KoperasiSummary.jsx
- * - coba fetch /dashboard/koperasi-summary
- * - kalau gagal -> fallback ke mockData (developer mode)
- */
-
-const mockData = {
-  total_koperasi: 830,
-  total_aktif: 720,
-  total_nonaktif: 110,
-  per_kecamatan: [
-    { kecamatan: "Karawang Barat", total: 120 },
-    { kecamatan: "Karawang Timur", total: 90 },
-    { kecamatan: "Telukjambe", total: 70 },
-    { kecamatan: "Cikampek", total: 180 },
-    { kecamatan: "Purwasari", total: 150 },
-    { kecamatan: "Tirtamulya", total: 120 },
-    { kecamatan: "Lemahabang", total: 100 },
-  ],
-  per_sektor: [
-    { sektor: "Pertanian", total: 200 },
-    { sektor: "Perdagangan", total: 280 },
-    { sektor: "Jasa", total: 150 },
-    { sektor: "Industri", total: 80 },
-    { sektor: "Lainnya", total: 120 },
-  ],
-  analisis: {
-    keterangan:
-      "Sebagian besar koperasi telah aktif. Fokus pembinaan diarahkan pada koperasi nonaktif dan sektor industri kecil.",
-    dasar_perhitungan: {
-      total_koperasi: "Jumlah data koperasi terdaftar",
-      total_aktif: "Koperasi dengan status aktif",
-      total_nonaktif: "Koperasi yang belum aktif atau nonaktif",
-    },
-    catatan: "Data saat ini masih menggunakan mock (dev). Hubungkan backend untuk data real.",
-  },
-  status_keuangan: {
-    sehat: 520,
-    prihatin: 210,
-    gagal: 100,
-  },
-};
+import { Users, Banknote, FileText, AlertCircle } from "lucide-react";
 
 export default function KoperasiSummary() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [usingMock, setUsingMock] = useState(false);
   const [error, setError] = useState("");
+  const [duplikatSummary, setDuplikatSummary] = useState(null); // optional quick view
   const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
+
     const fetchSummary = async () => {
       try {
-        const res = await axiosInstance.get("/dashboard/koperasi-summary");
+        setLoading(true);
+        const res = await axiosInstance.get("dashboard/koperasi-summary");
         if (!mounted) return;
+
         if (res.data?.success) {
           setData(res.data.data);
-          setUsingMock(false);
+          setError("");
         } else {
-          // jika response non-standard treat as mock
-          setData(mockData);
-          setUsingMock(true);
+          setError(res.data?.message || "Response tidak sukses dari server");
         }
       } catch (err) {
-        console.warn("Koperasi summary fetch failed — using mock data.", err?.message || err);
-        if (!mounted) return;
-        setData(mockData);
-        setUsingMock(true);
-        // setError optionally if you want to show an error card; keep silent so UI still shows
+        console.error("fetchSummary error:", err);
+        setError(err.response?.data?.message || err.message || "Gagal memuat data");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -96,6 +51,20 @@ export default function KoperasiSummary() {
       mounted = false;
     };
   }, []);
+
+  // optional quick fetch duplikat (first page)
+  const fetchDuplikat = async () => {
+    try {
+      const res = await axiosInstance.get("dashboard/koperasi-duplikat?limit=50");
+      if (res.data?.success) {
+        setDuplikatSummary(res.data.data);
+      } else {
+        console.warn("Duplikat API tidak sukses:", res.data);
+      }
+    } catch (err) {
+      console.warn("Gagal fetch duplikat:", err);
+    }
+  };
 
   if (loading) {
     return (
@@ -108,41 +77,46 @@ export default function KoperasiSummary() {
     );
   }
 
-  if (!data) {
+  if (error) {
     return (
       <div className="bg-red-50 border-2 border-red-300 p-4 rounded-lg">
         <div className="flex items-center gap-3">
           <AlertCircle className="w-6 h-6 text-red-600" />
-          <p className="text-red-700">Gagal memuat data koperasi.</p>
+          <p className="text-red-700">Gagal memuat data: {error}</p>
         </div>
       </div>
     );
   }
 
-  // derived values
-  const total = data.total_koperasi || 0;
-  const active = data.total_aktif || 0;
-  const nonactive = data.total_nonaktif || 0;
+  if (!data) {
+    return null;
+  }
 
-  const pieStatus = [
-    { name: "Aktif", value: active, color: "#10b981" },
-    { name: "Nonaktif", value: nonactive, color: "#f59e0b" },
+  // map fields from API response (controller returns this structure)
+  const total = data.total_koperasi ?? 0;
+  const active = data.total_aktif ?? 0;
+  const nonactive = data.total_nonaktif ?? total - active;
+  const total_lengkap = data.kelengkapan?.total_lengkap ?? 0;
+  const total_tidak_lengkap = data.kelengkapan?.total_tidak_lengkap ?? total - total_lengkap;
+
+  const pieKelengkapan = [
+    { name: "Lengkap", value: total_lengkap, color: "#10b981" },
+    { name: "Tidak Lengkap", value: total_tidak_lengkap, color: "#f59e0b" },
   ];
 
-  const keuanganData = [
-    { name: "Sehat", value: data.status_keuangan?.sehat || 0, color: "#3b82f6" },
-    { name: "Prihatin", value: data.status_keuangan?.prihatin || 0, color: "#f97316" },
-    { name: "Gagal", value: data.status_keuangan?.gagal || 0, color: "#ef4444" },
-  ];
-
-  const chartKecamatan = (data.per_kecamatan || []).map((it) => ({
-    kecamatan: it.kecamatan,
-    total: it.total,
-  }));
-
-  const chartSektor = (data.per_sektor || []).map((it) => ({
-    sektor: it.sektor,
-    total: it.total,
+  const perKecamatan = data.per_kecamatan || [];
+  const perJenis = data.per_jenis_koperasi || [];
+  const perKeuangan = (data.per_keuangan || []).map((r) => ({
+    ...r,
+    // ensure color mapping
+    color:
+      r.kondisi_keuangan === "Sehat"
+        ? "#10b981"
+        : r.kondisi_keuangan === "Prihatin"
+        ? "#f97316"
+        : r.kondisi_keuangan === "Gagal"
+        ? "#ef4444"
+        : "#94a3b8",
   }));
 
   return (
@@ -155,16 +129,27 @@ export default function KoperasiSummary() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Dashboard Koperasi</h1>
-            <p className="text-sm text-gray-600">Ringkasan data & analisis koperasi</p>
+            <p className="text-sm text-gray-600">Ringkasan data & analisis koperasi (live)</p>
           </div>
 
-          {usingMock && (
-            <div className="ml-auto">
-              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-md border border-amber-200">
-                DEV: menggunakan data mock
-              </span>
-            </div>
-          )}
+          <div className="ml-auto flex items-center gap-3">
+            <button
+              onClick={() => {
+                fetchDuplikat();
+                navigate("/koperasi-duplikat"); // optional: navigate to a dedicated page
+              }}
+              className="px-3 py-2 bg-amber-100 text-amber-800 rounded-md border border-amber-200 text-sm hover:bg-amber-200 transition"
+            >
+              Lihat Duplikat NIK
+            </button>
+
+            <button
+              onClick={() => window.location.reload()}
+              className="px-3 py-2 bg-slate-100 rounded-md border text-sm hover:bg-slate-200"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
 
         {/* STAT CARDS */}
@@ -176,7 +161,7 @@ export default function KoperasiSummary() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Koperasi</p>
-                <p className="text-2xl font-bold text-slate-900">{total.toLocaleString("id-ID")}</p>
+                <p className="text-2xl font-bold text-slate-900">{Number(total).toLocaleString("id-ID")}</p>
               </div>
             </div>
           </div>
@@ -188,7 +173,7 @@ export default function KoperasiSummary() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Koperasi Aktif</p>
-                <p className="text-2xl font-bold text-green-600">{active.toLocaleString("id-ID")}</p>
+                <p className="text-2xl font-bold text-green-600">{Number(active).toLocaleString("id-ID")}</p>
               </div>
             </div>
           </div>
@@ -200,13 +185,13 @@ export default function KoperasiSummary() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Koperasi Nonaktif</p>
-                <p className="text-2xl font-bold text-yellow-600">{nonactive.toLocaleString("id-ID")}</p>
+                <p className="text-2xl font-bold text-yellow-600">{Number(nonactive).toLocaleString("id-ID")}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ANALISIS & DASAR */}
+        {/* KELENGKAPAN + PIE */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-md border border-gray-100">
             <h3 className="text-lg font-bold text-slate-800 mb-3">Analisis Singkat</h3>
@@ -215,54 +200,40 @@ export default function KoperasiSummary() {
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
               <h4 className="font-semibold text-gray-800 mb-2">Dasar Perhitungan</h4>
               <ul className="text-sm text-gray-600 space-y-2">
-                <li>• {data.analisis?.dasar_perhitungan?.total_koperasi}</li>
-                <li>• {data.analisis?.dasar_perhitungan?.total_aktif}</li>
-                <li>• {data.analisis?.dasar_perhitungan?.total_nonaktif}</li>
+                <li>• Total koperasi: {total}</li>
+                <li>• Total aktif: {active}</li>
+                <li>• Total tidak aktif: {nonactive}</li>
               </ul>
-            </div>
-
-            <div className="mt-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <p className="text-sm text-blue-800 font-semibold">📝 Catatan</p>
-              <p className="text-sm text-gray-700 mt-1">{data.analisis?.catatan}</p>
             </div>
           </div>
 
           <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
-            <h4 className="font-bold text-slate-800 mb-3">Status Keuangan</h4>
+            <h4 className="font-bold text-slate-800 mb-3">Kelengkapan Data</h4>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={keuanganData} dataKey="value" cx="50%" cy="50%" outerRadius={70} label>
-                  {keuanganData.map((entry, i) => (
+                <Pie data={pieKelengkapan} dataKey="value" cx="50%" cy="50%" outerRadius={70} label>
+                  {pieKelengkapan.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v) => v.toLocaleString("id-ID")} />
+                <Tooltip formatter={(v) => v?.toLocaleString?.("id-ID") ?? v} />
               </PieChart>
             </ResponsiveContainer>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
-              <div className="text-center">
-                <div className="font-semibold text-slate-900">{(data.status_keuangan?.sehat || 0).toLocaleString("id-ID")}</div>
-                <div className="text-gray-500">Sehat</div>
-              </div>
-              <div className="text-center">
-                <div className="font-semibold text-slate-900">{(data.status_keuangan?.prihatin || 0).toLocaleString("id-ID")}</div>
-                <div className="text-gray-500">Prihatin</div>
-              </div>
-              <div className="text-center">
-                <div className="font-semibold text-slate-900">{(data.status_keuangan?.gagal || 0).toLocaleString("id-ID")}</div>
-                <div className="text-gray-500">Gagal</div>
-              </div>
+
+            <div className="mt-3 text-center">
+              <div className="text-2xl font-bold">{Number(total_lengkap).toLocaleString("id-ID")}</div>
+              <div className="text-sm text-gray-500">Data lengkap</div>
+              <div className="text-sm text-gray-400 mt-1">{Number(total_tidak_lengkap).toLocaleString("id-ID")} data belum lengkap</div>
             </div>
           </div>
         </div>
 
         {/* CHARTS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* KECAMATAN */}
           <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
             <h4 className="font-bold mb-3">Sebaran Koperasi per Kecamatan</h4>
             <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={chartKecamatan}>
+              <BarChart data={perKecamatan}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="kecamatan" tick={{ fontSize: 12 }} />
                 <YAxis />
@@ -273,19 +244,33 @@ export default function KoperasiSummary() {
             </ResponsiveContainer>
           </div>
 
-          {/* SEKTOR */}
           <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
-            <h4 className="font-bold mb-3">Sebaran Koperasi berdasarkan Sektor</h4>
+            <h4 className="font-bold mb-3">Sebaran Koperasi berdasarkan Jenis</h4>
             <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={chartSektor}>
+              <BarChart data={perJenis}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="sektor" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="jenis" tick={{ fontSize: 12 }} />
                 <YAxis />
                 <Tooltip formatter={(v) => v.toLocaleString("id-ID")} />
                 <Legend />
                 <Bar dataKey="total" fill="#10b981" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* PER KEUANGAN */}
+        <div className="mb-6">
+          <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
+            <h4 className="font-bold mb-3">Status Keuangan (rade_koperasi)</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {perKeuangan.map((k) => (
+                <div key={k.kondisi_keuangan} className="p-3 rounded-lg bg-gray-50 border">
+                  <div className="font-semibold text-slate-900">{k.kondisi_keuangan}</div>
+                  <div className="text-2xl font-bold">{Number(k.total).toLocaleString("id-ID")}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
