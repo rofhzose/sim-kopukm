@@ -237,9 +237,11 @@ const allowedOrigins = [
   "https://khfdz.my.id",
   "https://www.khfdz.my.id",
   "https://api.khfdz.my.id",
+  "http://api.khfdz.my.id",
   "http://localhost:3000",
   "http://127.0.0.1:3000"
 ];
+
 
 
 // ================================
