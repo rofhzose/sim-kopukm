@@ -9,7 +9,7 @@ import BantuanPage from "./pages/BantuanPage";
 import DuplikatPage from "./pages/DuplikatPage"
 import BantuanTidakTerdaftarPage from "./pages/BantuanTidakTerdaftarPage";
 import KoperasiPage from "./pages/KoperasiPage";
-
+import KoperasiDataPage from "./pages/KoperasiDataPage";
 
 function App() {
   return (
@@ -24,6 +24,7 @@ function App() {
         <Route path="/duplikat" element={<DuplikatPage />} />
         <Route path="/bantuan-tidak-terdaftar" element={<BantuanTidakTerdaftarPage />} />
         <Route path="/koperasi" element={<KoperasiPage />} />
+        <Route path="/koperasidata" element={<KoperasiDataPage />} />
 
       </Routes>
     </BrowserRouter>

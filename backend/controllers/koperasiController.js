@@ -261,4 +261,96 @@ export const getKoperasiDuplikatDetails = async (req, res) => {
     console.error("Error getKoperasiDuplikatDetails:", error);
     return res.status(500).json({ success: false, message: "Gagal mengambil detail duplikat", error: error.message });
   }
+  
+};
+/**
+ * GET /api/koperasi  (paginated + search)
+ * Query params:
+ *   - page (default 1)
+ *   - limit (default 100)
+ *   - q (optional: search by nama_koperasi, nomor_induk_koperasi, kecamatan)
+ *
+ * Response:
+ * {
+ *   success: true,
+ *   data: {
+ *     rows: [...],
+ *     total: 123
+ *   }
+ * }
+ */
+export const getKoperasiList = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 1000);
+    const offset = (page - 1) * limit;
+    const q = (req.query.q || "").trim();
+
+    // Base WHERE (ignore empty strings like '-' or '0' if you want)
+    let whereClauses = [];
+    let params = [];
+
+    if (q) {
+      // search on nama_koperasi, nomor_induk_koperasi, kecamatan (case-insensitive)
+      whereClauses.push(`(
+        LOWER(COALESCE(nama_koperasi, '')) LIKE ?
+        OR LOWER(COALESCE(nomor_induk_koperasi, '')) LIKE ?
+        OR LOWER(COALESCE(kecamatan, '')) LIKE ?
+      )`);
+      const like = `%${q.toLowerCase()}%`;
+      params.push(like, like, like);
+    }
+
+    // Optional: exclude obviously invalid NIK if you want in some endpoints
+    // whereClauses.push("TRIM(nomor_induk_koperasi) NOT IN ('', '-', '0')");
+
+    const whereSQL = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+    // total count (matching filter)
+    const countQuery = `SELECT COUNT(*) AS total FROM data_koperasi ${whereSQL}`;
+    const [[countRow]] = await pool.query(countQuery, params);
+    const total = countRow?.total ?? 0;
+
+    // fetch rows (select selected columns to keep payload small)
+    const selectCols = [
+      "nomor_induk_koperasi",
+      "nama_koperasi",
+      "jenis_koperasi",
+      "bentuk_koperasi",
+      "kelurahan",
+      "kecamatan",
+      "kelompok_koperasi",
+      "status_koperasi",
+      "alamat_lengkap",
+      "kode_pos",
+      "email_koperasi",
+      "kuk",
+      "grade_koperasi"
+    ].join(", ");
+
+    const dataQuery = `
+      SELECT ${selectCols}
+      FROM data_koperasi
+      ${whereSQL}
+      ORDER BY kecamatan ASC, nama_koperasi ASC
+      LIMIT ? OFFSET ?;
+    `;
+
+    // add limit/offset to params (must append)
+    const dataParams = params.concat([limit, offset]);
+    const [rows] = await pool.query(dataQuery, dataParams);
+
+    return res.json({
+      success: true,
+      data: {
+        rows,
+        total,
+        page,
+        limit,
+      },
+    });
+  } catch (error) {
+    console.error("Error getKoperasiList:", error);
+    return res.status(500).json({ success: false, message: "Gagal memuat daftar koperasi", error: error.message });
+  }
 };

@@ -277,7 +277,7 @@ export default function KoperasiSummary() {
         {/* BUTTON */}
         <div className="flex justify-center mb-10">
           <button
-            onClick={() => navigate("/koperasi")}
+            onClick={() => navigate("/koperasidata")}
             className="px-8 py-3 bg-yellow-600 text-white font-semibold rounded-xl hover:bg-yellow-700 transition shadow"
           >
             <FileText className="w-4 h-4 inline-block mr-2" />
