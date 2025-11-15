@@ -22,10 +22,12 @@ export default function LoginPage() {
       const res = await axiosInstance.post("/auth/login", form);
 
       if (res.data?.success) {
+        console.log("Login sukses, token:", res.data.token);
         localStorage.setItem("token", res.data.token);
 
-        // ✅ Gunakan navigate biar SPA redirect tanpa reload
-        navigate("/dashboard");
+// debug
+        console.log("Navigating to /overview now");
+        navigate("/overview");
       } else {
         setError(res.data?.message || "Login gagal, periksa username/password");
       }

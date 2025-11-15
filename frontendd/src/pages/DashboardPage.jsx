@@ -37,7 +37,9 @@ export default function DashboardPage() {
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
           Statistik Data Bantuan Tidak Terdaftar
         </h2>
+        <div className="w-full min-h-screen flex justify-center items-start pt-10">
         <UMKMBantuanTidakTerdaftarSummary />
+      </div>
       </section>
 
 

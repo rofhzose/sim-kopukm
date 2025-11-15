@@ -1,0 +1,5 @@
+[2025-11-15T07:16:04.864Z] 500 OPTIONS /api/auth/login - Not allowed by CORS
+[2025-11-15T07:20:15.564Z] 500 OPTIONS /api/auth/login - Not allowed by CORS
+[2025-11-15T07:21:27.885Z] 500 OPTIONS /api/auth/login - Not allowed by CORS
+[2025-11-15T07:21:28.635Z] 500 OPTIONS /api/auth/login - Not allowed by CORS
+[2025-11-15T08:12:59.650Z] 500 OPTIONS /api/auth/login - Not allowed by CORS

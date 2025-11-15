@@ -2,6 +2,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
+import OverviewDashboard from "./pages/OverviewDashboard";
 import DashboardPage from "./pages/DashboardPage";
 import UmkmPage from "./pages/UMKMPage";
 import BantuanPage from "./pages/BantuanPage";
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/overview" element={<OverviewDashboard />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/umkm" element={<UmkmPage />} />
         <Route path="/bantuan" element={<BantuanPage />} />
