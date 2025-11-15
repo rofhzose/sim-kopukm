@@ -43,9 +43,9 @@ export default function KoperasiDataPage() {
 
    // --- ganti endpointsToTry ---
   const endpointsToTry = [
-    "/api/koperasi",                   // primary: getKoperasiList controller
-    "/api/dashboard/koperasi",         // alt: if router mounted under /api
-    "/api/dashboard/koperasi-data",    // alt name
+    "/koperasi",                   // primary: getKoperasiList controller
+    "/dashboard/koperasi",         // alt: if router mounted under /api
+    "/dashboard/koperasi-data",    // alt name
     "/dashboard/koperasi",             // alt if mounted without /api
     "/koperasi"                        // fallback
   ];
