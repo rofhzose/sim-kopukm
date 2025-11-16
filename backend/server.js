@@ -239,7 +239,9 @@ const allowedOrigins = [
   "https://api.khfdz.my.id",
   "http://api.khfdz.my.id",
   "http://localhost:3000",
-  "http://127.0.0.1:3000"
+  "http://127.0.0.1:3000",
+  "http://localhost:3001",   // ✅ WAJIB TAMBAH
+  "http://127.0.0.1:3001"  
 ];
 
 

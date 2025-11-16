@@ -60,14 +60,7 @@ export default function UMKMDuplikatSummary() {
           </p>
         </div>
 
-        {info.total_kelebihan_duplikat !== undefined && (
-          <div>
-            <p className="text-gray-600 text-sm">Kelebihan Duplikat</p>
-            <p className="text-2xl font-bold text-amber-600">
-              {Number(info.total_kelebihan_duplikat || 0).toLocaleString("id-ID")}
-            </p>
-          </div>
-        )}
+        
       </div>
 
       <button
