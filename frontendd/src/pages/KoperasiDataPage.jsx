@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom"
 import axiosInstance from "../utils/axiosInstance";
 import TableKoperasi from "../components/TableKoperasi";
 import { Download, Search } from "lucide-react";
@@ -23,6 +24,8 @@ export default function KoperasiDataPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
+  const navigate = useNavigate();
+
 
   // columns same as TableKoperasi
   const columns = [
@@ -124,12 +127,22 @@ export default function KoperasiDataPage() {
     <div className="p-6 min-h-screen bg-gray-50 pb-28">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">📋 Data Koperasi Lengkap</h1>
-            <p className="text-sm text-gray-500">Tabel item koperasi — pencarian, paging, dan ekspor CSV.</p>
-          </div>
+  <div className="flex items-center gap-4">
+    <button
+      onClick={() => navigate(-1)}
+      className="px-3 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 transition"
+      title="Kembali"
+    >
+      ⬅ Kembali
+    </button>
 
-          <div className="flex items-center gap-3">
+    <div>
+      <h1 className="text-2xl font-bold text-slate-900">📋 Data Koperasi Lengkap</h1>
+      <p className="text-sm text-gray-500">Tabel item koperasi — pencarian, paging, dan ekspor CSV.</p>
+    </div>
+  </div>
+
+  <div className="flex items-center gap-3">
             <div className="flex items-center bg-white border rounded-lg px-3 py-1">
               <Search className="w-4 h-4 text-gray-500 mr-2" />
               <input

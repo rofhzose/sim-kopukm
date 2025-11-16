@@ -156,7 +156,7 @@ export default function OverviewDashboard() {
             <BarChart3 size={40} className="text-green-600" />
             <div>
               <p className="text-gray-500">Analisis Laporan</p>
-              <p className="text-2xl font-bold">24</p>
+              <p className="text-2xl font-bold">Coming soon</p>
             </div>
           </div>
 
@@ -183,47 +183,6 @@ export default function OverviewDashboard() {
               </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* ====== FOOTER NAVIGATION ====== */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t p-2">
-        <div className="grid grid-cols-4 text-center">
-          {/* Dashboard */}
-          <button
-            onClick={() => navigate("/overview")}
-            className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition"
-          >
-            <Home size={24} />
-            <span className="text-xs font-medium">Dashboard</span>
-          </button>
-
-          {/* Sekretariat */}
-          <button
-            onClick={() => navigate("/sekretariat")}
-            className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition"
-          >
-            <FileText size={24} />
-            <span className="text-xs font-medium">Sekretariat</span>
-          </button>
-
-          {/* UMKM */}
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition"
-          >
-            <Store size={24} />
-            <span className="text-xs font-medium">Bidang UMKM</span>
-          </button>
-
-          {/* Koperasi */}
-          <button
-            onClick={() => navigate("/koperasi")}
-            className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition"
-          >
-            <Banknote size={24} />
-            <span className="text-xs font-medium">Koperasi</span>
-          </button>
         </div>
       </div>
     </div>

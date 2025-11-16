@@ -164,6 +164,15 @@ export default function UMKMSummary() {
               </h1>
               <p className="text-gray-600 text-sm mt-1">Ringkasan data dan analisis UMKM terdaftar</p>
             </div>
+            <div className="ml-auto flex items-center gap-3">
+
+            <button
+              onClick={() => window.location.reload()}
+              className="px-3 py-2 bg-slate-100 rounded-md border text-sm hover:bg-slate-200"
+            >
+              Refresh
+            </button>
+            </div>
           </div>
         </div>
 

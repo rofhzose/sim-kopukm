@@ -108,9 +108,6 @@ export default function BantuanTidakTerdaftarTable() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold text-red-700 mb-4">
-        🚨 Penerima Bantuan Tidak Terdaftar
-      </h1>
 
       {/* =================== FILTER BAR =================== */}
       <div className="bg-white shadow-md rounded-lg p-4 mb-6 flex flex-wrap items-center gap-4 border">

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import TableBantuan from "../components/BantuanTable";
+import { AlertTriangle, Search, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function BantuanPage() {
   const [data, setData] = useState([]);
@@ -8,6 +10,7 @@ export default function BantuanPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
 
   // ✅ Fetch data utama
   const fetchData = async () => {
@@ -38,10 +41,18 @@ export default function BantuanPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-blue-600">
-        🎁 Data Bantuan UMKM
-      </h1>
-
+      {/* 🔙 Tombol Kembali */}
+            <div className="flex items-center gap-3 mb-6">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition"
+              >
+                <ArrowLeft size={18} /> Kembali
+              </button>
+              <h1 className="text-2xl font-bold text-red-600">
+                🎁 Data Bantuan UMKM
+              </h1>
+      </div>
       {/* =================== TABLE =================== */}
       {loading ? (
         <p className="text-gray-500 text-center mt-10">🔄 Memuat data...</p>

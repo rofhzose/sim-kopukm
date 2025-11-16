@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import TableUMKM from "../components/SummaryTable";
 import { Search, Filter, RefreshCw, MapPin, Building2, Loader2 } from "lucide-react";
@@ -8,6 +9,8 @@ export default function UMKMPage() {
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+
 
   // 🔹 Filter options
   const [kecamatanList, setKecamatanList] = useState([]);
@@ -96,22 +99,37 @@ export default function UMKMPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 p-6">
       <div className="max-w-[1600px] mx-auto space-y-6">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 shadow-2xl text-white">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="bg-white bg-opacity-20 p-4 rounded-xl backdrop-blur-sm">
-              <Building2 className="w-10 h-10" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight">
-                Data UMKM Kabupaten Karawang
-              </h1>
-              <p className="text-blue-100 mt-2 text-lg">
-                Sistem Informasi & Manajemen Data Usaha Mikro, Kecil, dan Menengah
-              </p>
-            </div>
-          </div>
-        </div>
+       {/* Header */}
+<div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 shadow-2xl text-white">
+  <div className="flex items-start justify-between">
+    
+    {/* Kiri: Icon + Judul */}
+    <div className="flex items-center gap-4">
+      <div className="bg-white bg-opacity-20 p-4 rounded-xl backdrop-blur-sm">
+        <Building2 className="w-10 h-10" />
+      </div>
+
+      <div>
+        <h1 className="text-4xl font-bold tracking-tight">
+          Data UMKM Kabupaten Karawang
+        </h1>
+        <p className="text-blue-100 mt-2 text-lg">
+          Sistem Informasi & Manajemen Data Usaha Mikro, Kecil, dan Menengah
+        </p>
+      </div>
+    </div>
+
+    {/* Kanan: Tombol Kembali */}
+          <button
+        onClick={() => navigate(-1)}
+        className="px-4 py-2 bg-white text-blue-700 font-semibold rounded-lg shadow-md hover:bg-blue-50 transition"
+        title="Kembali"
+      >
+        ⬅ Kembali
+      </button>
+  </div>
+</div>
+
 
         {/* Filter Bar */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
