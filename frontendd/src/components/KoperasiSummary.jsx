@@ -136,6 +136,7 @@ export default function KoperasiSummary() {
             <button
               onClick={() => {
                 fetchDuplikat();
+                navigate("/koperasi-duplikat"); // optional: navigate to a dedicated page
                 navigate("/duplikat-koperasi"); // optional: navigate to a dedicated page
               }}
               className="px-3 py-2 bg-amber-100 text-amber-800 rounded-md border border-amber-200 text-sm hover:bg-amber-200 transition"

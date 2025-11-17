@@ -1,3 +1,4 @@
+// src/pages/DuplikatKoperasi.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
@@ -31,6 +32,7 @@ export default function DuplikatKoperasi() {
 
     for (const ep of endpoints) {
       try {
+        // server expects (limit, offset) in many implementations
         res = await axiosInstance.get(ep, { params: { limit: filters.limit, offset: (filters.page - 1) * filters.limit } });
         if (res?.data) break;
       } catch (err) {
@@ -92,15 +94,20 @@ export default function DuplikatKoperasi() {
   const handleNext = () => setFilters((p) => ({ ...p, page: p.page + 1 }));
   const handlePrev = () => setFilters((p) => ({ ...p, page: Math.max(1, p.page - 1) }));
 
-  // <-- Handler yang penting: navigasi ke halaman detail dengan query param nik
+  // Handler: clean NIK then navigate to details route
   const handleViewDetails = (nik) => {
-    console.log("Klik Lihat Detail, NIK:", nik);
+    console.log("Klik Lihat Detail, raw NIK:", nik);
     if (!nik) {
       alert("NIK tidak tersedia untuk grup ini.");
       return;
     }
-    // pastikan route di App.jsx: /duplikat-koperasi/details
-    navigate(`/duplikat-koperasi/details?nik=${encodeURIComponent(nik)}`);
+
+    // bersihkan kutip tunggal/dobel yang kadang muncul seperti "'3215..."
+    const clean = String(nik).trim().replace(/^'+|'+$/g, "").replace(/^"+|"+$/g, "");
+    console.log("Navigasi ke details dengan NIK:", clean);
+
+    // navigate to details route (App.jsx should have /duplikat-koperasi/details)
+    navigate(`/duplikat-koperasi/details?nik=${encodeURIComponent(clean)}`);
   };
 
   return (
@@ -108,8 +115,26 @@ export default function DuplikatKoperasi() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-indigo-700">🔎 Duplikat Koperasi (Berdasarkan NIK)</h1>
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="px-3 py-2 bg-gray-200 rounded">⬅ Kembali</button>
-          <button onClick={() => { setFilters((f) => ({ ...f, page: 1 })); fetchData(); }} className="px-3 py-2 bg-blue-600 text-white rounded">Refresh</button>
+          {/* Ubah: jangan menggunakan navigate(-1) yang bergantung pada history.
+              Arahkan langsung ke route dashboard koperasi (KoperasiSummary.jsx) */}
+          <button
+            onClick={() => {
+              // ganti '/dashboard/koperasi' dengan path yang sesuai jika route Anda berbeda
+              navigate("/koperasi", { replace: true });
+            }}
+            className="px-3 py-2 bg-gray-200 rounded"
+          >
+            ⬅ Kembali
+          </button>
+          <button
+            onClick={() => {
+              setFilters((f) => ({ ...f, page: 1 }));
+              fetchData();
+            }}
+            className="px-3 py-2 bg-blue-600 text-white rounded"
+          >
+            Refresh
+          </button>
         </div>
       </div>
 
@@ -119,13 +144,14 @@ export default function DuplikatKoperasi() {
         <p className="text-red-500 text-center mt-8">{error}</p>
       ) : (
         <>
-          {/* PASS handler ke komponen tabel */}
           <DuplikatTableKoperasi data={data} onViewDetails={handleViewDetails} />
 
           {pagination.total_group > 1 && (
             <div className="flex justify-center items-center mt-6 gap-4">
               <button onClick={handlePrev} disabled={filters.page === 1} className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">⬅️ Prev</button>
-              <span className="text-gray-700 font-medium">Halaman {pagination.current_page} dari {Math.max(1, Math.ceil(pagination.total_group / pagination.per_page))}</span>
+              <span className="text-gray-700 font-medium">
+                Halaman {pagination.current_page} dari {Math.max(1, Math.ceil(pagination.total_group / pagination.per_page))}
+              </span>
               <button onClick={handleNext} disabled={data.length < pagination.per_page} className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">Next ➡️</button>
             </div>
           )}

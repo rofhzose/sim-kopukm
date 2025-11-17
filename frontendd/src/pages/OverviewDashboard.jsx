@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axiosInstance from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
-import { Home, FileText, Store, Banknote, BarChart3, Users, Layers } from "lucide-react";
+import axiosInstance from "../utils/axiosInstance";
+import { Home, FileText, Store, Banknote, FileCheck, BarChart3, Users, Layers, Building2 } from "lucide-react";
 import logoDinkop from "../assets/logo_dinkopukm.png";
 import logoKrw from "../assets/logo_karawang.png";
 import logoKoperasi from "../assets/logo_koperasi.png";
@@ -69,11 +69,10 @@ export default function OverviewDashboard() {
       try {
         const payload = res.data;
         const d = payload.data ?? payload;
-        // controller returns total_aktif in data.total_aktif
-        const totalAktif = d?.total_aktif ?? d?.total ?? d?.total_koperasi ?? null;
 
+        // **Simpan seluruh objek response** supaya kelengkapan tersedia
         if (mounted) {
-          setKoperasiSummary({ total_aktif: totalAktif });
+          setKoperasiSummary(d);
         }
       } catch (err) {
         if (mounted) setErrorKoperasi("Format response tidak dikenali");
@@ -86,6 +85,7 @@ export default function OverviewDashboard() {
     return () => {
       mounted = false;
     };
+
   }, []);
 
   return (
@@ -119,31 +119,60 @@ export default function OverviewDashboard() {
         {/* Card 1: Sekretariat */}
         <div
           onClick={() => navigate("/sekretariat")}
-          className="cursor-pointer group bg-white border border-gray-100 rounded-2xl shadow-sm p-6 hover:shadow-xl transition-all hover:-translate-y-1"
-        >
-          <FileText size={40} className="text-green-600 mb-3 group-hover:scale-110 transition" />
-          <h3 className="text-xl font-bold text-gray-800">Sekretariat</h3>
-          <p className="text-gray-600 mt-1">Pengelolaan surat, administrasi, dan dokumen lembaga.</p>
+          className="cursor-pointer group bg-white border border-gray-100 rounded-2xl shadow-sm p-6 hover:shadow-xl transition-all hover:-translate-y-1">
+           <div className="flex justify-center">
+          <FileText size={40} className="text-green-600 mb-1 group-hover:scale-110 transition" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-10 text-center">SEKRETARIAT</h3>
+           <ul className="text-sm text-slate-600 space-y-2">
+            <li>• Sub Bagian Umum dan Kepegawaian</li>
+            <li>• Sub Bagian Program dan Keuangan</li>
+          </ul>
         </div>
 
         {/* Card 2: Bidang UMKM */}
         <div
           onClick={() => navigate("/dashboard")}
-          className="cursor-pointer group bg-white border border-gray-100 rounded-2xl shadow-sm p-6 hover:shadow-xl transition-all hover:-translate-y-1"
-        >
-          <Store size={40} className="text-blue-600 mb-3 group-hover:scale-110 transition" />
-          <h3 className="text-xl font-bold text-gray-800">Bidang UMKM</h3>
-          <p className="text-gray-600 mt-1">Analisis bantuan UMKM, data penerima, dan verifikasi.</p>
+          className="cursor-pointer group bg-white border border-gray-100 rounded-2xl shadow-sm p-6 hover:shadow-xl transition-all hover:-translate-y-1">
+         <div className="flex justify-center">
+           <Store size={40} className="text-blue-600 mb-1 group-hover:scale-110 transition" />
+          </div>
+          <h3 className="text-l font-bold text-gray-800 mb-6 text-center">BIDANG PEMBERDAYAAN DAN PENGEMBANGAN USAHA MIKRO, KECIL DAN MENENGAH</h3>
+           <ul className="text-sm text-slate-600 space-y-2">
+            <li>• Pendataan dan Fasilitas UMKM </li>
+            <li>• Pemberdayaan UMKM</li>
+            <li>• Pengembangan, Penguatan dan Perlindungan Usaha Mikro</li>
+          </ul>
         </div>
 
         {/* Card 3: Bidang Koperasi */}
         <div
           onClick={() => navigate("/koperasi")}
-          className="cursor-pointer group bg-white border border-gray-100 rounded-2xl shadow-sm p-6 hover:shadow-xl transition-all hover:-translate-y-1"
-        >
-          <Banknote size={40} className="text-yellow-600 mb-3 group-hover:scale-110 transition" />
-          <h3 className="text-xl font-bold text-gray-800">Bidang Koperasi</h3>
-          <p className="text-gray-600 mt-1">Data koperasi, keuangan, status aktif, dan pembinaan.</p>
+          className="cursor-pointer group bg-white border border-gray-100 rounded-2xl shadow-sm p-6 hover:shadow-xl transition-all hover:-translate-y-1">
+          <div className="flex justify-center">
+          <Banknote size={40} className="text-yellow-600 mb-1 group-hover:scale-110 transition" />
+          </div>
+          <h3 className="text-l font-bold text-gray-800 mb-6 text-center">BIDANG PENGAWASAN, PEMERIKSAAN DAN PENILAIAN KOPERASI</h3>
+           <ul className="text-sm text-slate-600 space-y-2">
+            <li>• Penilaian Koperasi</li>
+            <li>• Keanggotaan dan Penerapan Peraturan</li>
+            <li>• Pengawasan, Pemeriksaan dan Penilaian Kesehatan</li>
+          </ul>
+        </div>
+
+        {/* Card 4: Bidang Koperasi */}
+        <div
+          onClick={() => navigate("/koperasi")}
+          className="cursor-pointer group bg-white border border-gray-100 rounded-2xl shadow-sm p-6 hover:shadow-xl transition-all hover:-translate-y-1">
+            <div className="flex justify-center">
+          <FileCheck size={40} className="text-purple-600 mb-1 group-hover:scale-110 transition" />
+          </div>
+          <h3 className="text-l font-bold text-gray-800 mb-6 text-center">BIDANG PEMBERDAYAAN DAN PERIZINAN KOPERASI</h3>
+           <ul className="text-sm text-slate-600 space-y-2">
+            <li>• Perizinan Koperasi</li>
+            <li>• Peningkatan Kapasitas SDM Koperasi</li>
+            <li>• Pengembangan, Penguatan dan Perlindungan Koperasi</li>
+          </ul>
         </div>
       </div>
 
@@ -171,7 +200,7 @@ export default function OverviewDashboard() {
           </div>
 
           <div className="bg-white border border-gray-100 p-5 rounded-xl shadow-sm flex items-center gap-4">
-            <Layers size={40} className="text-yellow-600" />
+            <Building2 size={40} className="text-yellow-600" />
             <div>
               <p className="text-gray-500">Jumlah Koperasi Aktif</p>
               <p className="text-2xl font-bold">
@@ -179,10 +208,25 @@ export default function OverviewDashboard() {
                   ? "Memuat..."
                   : errorKoperasi
                   ? "—"
-                  : (koperasiSummary?.total_aktif ?? 1076).toLocaleString("id-ID")}
+                  : (koperasiSummary?.total_aktif ?? 0).toLocaleString("id-ID")}
               </p>
             </div>
           </div>
+
+          <div className="bg-white border border-gray-100 p-5 rounded-xl shadow-sm flex items-center gap-4">
+            <Layers size={40} className="text-purple-600" />
+            <div>
+              <p className="text-gray-500">Data Koperasi belum Lengkap</p>
+              <p className="text-2xl font-bold">
+                {loadingKoperasi
+                  ? "Memuat..."
+                  : errorKoperasi
+                  ? "—"
+                  : (Number(koperasiSummary?.kelengkapan?.total_tidak_lengkap ?? 0)).toLocaleString("id-ID")}
+              </p>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
