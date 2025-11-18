@@ -1,19 +1,30 @@
 import express from "express";
-import { 
-  getAllData, 
-  getDataById, 
-  getAllDataBersih,
-  getDataBersihById
+import {
+  createUMKM,
+  getUMKMDetail,
+  updateUMKM,
+  deleteUMKM,
+  getUMKMList
 } from "../controllers/umkmController.js";
+
+import { verifyToken, isSuperAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// 🧹 Route untuk data bersih (lebih spesifik → TARUH DI ATAS)
-router.get("/bersih", getAllDataBersih);
-router.get("/bersih/:id", getDataBersihById);
+/*  
+   Semua route UMKM sekarang wajib:
+   🔒 verifyToken  → user harus punya token
+   🛡  isSuperAdmin → user harus super admin
+*/
 
-// 🗂 Route untuk data kotor
-router.get("/", getAllData);
-router.get("/:id", getDataById);
+router.get("/umkm", verifyToken, isSuperAdmin, getUMKMList);
+
+router.get("/umkm/:id", verifyToken, isSuperAdmin, getUMKMDetail);
+
+router.post("/umkm", verifyToken, isSuperAdmin, createUMKM);
+
+router.put("/umkm/:id", verifyToken, isSuperAdmin, updateUMKM);
+
+router.delete("/umkm/:id", verifyToken, isSuperAdmin, deleteUMKM);
 
 export default router;

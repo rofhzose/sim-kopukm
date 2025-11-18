@@ -264,7 +264,7 @@ export default function UMKMSummary() {
                   dataKey="value"
                   cx="50%"
                   cy="50%"
-                  outerRadius={100}
+                  outerRadius={80}
                   label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
                 >
                   {pieData.map((entry, i) => (
@@ -284,7 +284,7 @@ export default function UMKMSummary() {
                   data={nibData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={100}
+                  outerRadius={80}
                   label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
                   dataKey="value"
                 >
@@ -299,29 +299,44 @@ export default function UMKMSummary() {
 
         </div>
 
-        {/* BAR CHART KECAMATAN */}
-        <div className="mb-8">
-          <ChartCard title="Sebaran UMKM per Kecamatan" icon={Building2}>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={chartKecamatan}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="kecamatan" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    border: '2px solid #3b82f6',
-                    borderRadius: '8px',
-                    fontWeight: 600
-                  }} 
-                  formatter={(v) => v.toLocaleString("id-ID")}
-                />
-                <Legend />
-                <Bar dataKey="total" fill="#3b82f6" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
+       {/* BAR CHART KECAMATAN (VERTIKAL KIRI) */}
+<div className="mb-8">
+  <ChartCard title="Sebaran UMKM per Kecamatan" icon={Building2}>
+    <ResponsiveContainer width="100%" height={500}>
+      <BarChart 
+        data={chartKecamatan}
+        layout="vertical"   // 🔥 Biar nama kecamatan ada di kiri dan kebaca
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        
+        {/* X = total UMKM */}
+        <XAxis type="number" tick={{ fontSize: 12 }} />
+        
+        {/* Y = nama kecamatan */}
+        <YAxis 
+          type="category" 
+          dataKey="kecamatan" 
+          width={150}          // 🔥 Tambahin biar teks panjang tetap kebaca
+          tick={{ fontSize: 12 }} 
+        />
+
+        <Tooltip 
+          contentStyle={{
+            backgroundColor: "#fff",
+            border: "2px solid #3b82f6",
+            borderRadius: "8px",
+            fontWeight: 600
+          }}
+          formatter={(v) => v.toLocaleString("id-ID")}
+        />
+        <Legend />
+        
+        <Bar dataKey="total" fill="#3b82f6" radius={[0, 8, 8, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  </ChartCard>
+</div>
+
 
         {/* BAR CHART JENIS UKM */}
         <div className="mb-8">

@@ -66,23 +66,26 @@ export default function TableUMKM({ data, page, limit }) {
           style={{ maxHeight: "70vh" }}
         >
           <table className="min-w-full">
-            <thead>
-              <tr className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase sticky left-0 bg-blue-600">
-                  No
-                </th>
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase">Nama</th>
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase">Jenis Kelamin</th>
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase">Nama Usaha</th>
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase">Alamat</th>
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase">Kecamatan</th>
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase">Desa</th>
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase">Longitude</th>
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase">Latitude</th>
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase">Jenis UKM</th>
-                <th className="px-6 py-5 text-left font-bold text-sm uppercase">NIB</th>
-              </tr>
-            </thead>
+           <thead className="sticky top-0 z-20">
+  <tr className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase sticky left-0 bg-blue-600 z-30">
+      No
+    </th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Nama</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Jenis Kelamin</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Nama Usaha</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Alamat</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Kecamatan</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Desa</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Longitude</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Latitude</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Lokasi</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Jenis UKM</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">NIB</th>
+    <th className="px-6 py-5 text-left font-bold text-sm uppercase bg-blue-600">Aksi</th>
+  </tr>
+</thead>
+
 
             <tbody className="divide-y divide-gray-200">
               {data.map((item, i) => {
@@ -128,9 +131,46 @@ export default function TableUMKM({ data, page, limit }) {
 
                     <td className="px-6 py-4 font-mono">{renderValue(item.latitude)}</td>
 
+                    <td className="px-6 py-4">
+  <a
+    href={`https://www.google.com/maps?q=${item.latitude},${item.longitude}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-200 transition"
+  >
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+        d="M12 11a2 2 0 100-4 2 2 0 000 4zm0 0c-2.21 0-4 1.79-4 4v6h8v-6c0-2.21-1.79-4-4-4z"
+      />
+    </svg>
+    Maps
+  </a>
+</td>
+
                     <td className="px-6 py-4">{renderValue(item.jenis_ukm)}</td>
 
                     <td className="px-6 py-4 font-mono">{renderValue(item.nib)}</td>
+
+                    <td className="px-6 py-4">
+  <div className="flex gap-2">
+
+    <button
+      onClick={() => window.location.href = `/umkm/update/${item.id}`}
+      className="px-3 py-1 bg-yellow-500 text-white rounded-lg text-xs font-bold hover:bg-yellow-600 transition"
+    >
+      Update
+    </button>
+
+    <button
+      onClick={() => handleDelete(item.id)}
+      className="px-3 py-1 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition"
+    >
+      Delete
+    </button>
+
+  </div>
+</td>
+
                   </tr>
                 );
               })}
