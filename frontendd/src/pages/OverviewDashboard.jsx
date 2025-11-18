@@ -185,7 +185,7 @@ export default function OverviewDashboard() {
             <BarChart3 size={40} className="text-green-600" />
             <div>
               <p className="text-gray-500">Analisis Laporan</p>
-              <p className="text-2xl font-bold">Coming soon</p>
+              <p className="text-2xl font-bold">Sekretariat</p>
             </div>
           </div>
 

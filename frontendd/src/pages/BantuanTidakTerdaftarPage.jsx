@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import { AlertTriangle, Search, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import LogoKarawang from "../assets/logo_karawang.png";
 
 export default function BantuanTidakTerdaftarPage() {
   const [data, setData] = useState([]);
@@ -117,115 +118,220 @@ export default function BantuanTidakTerdaftarPage() {
   return (
     <div className="p-6">
       {/* 🔙 Tombol Kembali */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition"
-        >
-          <ArrowLeft size={18} /> Kembali
-        </button>
-        <h1 className="text-2xl font-bold text-red-600">
-          🚨 Penerima Bantuan Tidak Terdaftar
-        </h1>
+
+
+      {/* ================= HEADER ================= */}
+<div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 shadow-2xl text-white mb-6">
+  <div className="flex items-center justify-between">
+    
+    {/* Logo + Text */}
+    <div className="flex items-center gap-4">
+      <div className="bg-white bg-opacity-20 h-16 flex items-center justify-center rounded-xl backdrop-blur-sm">
+        <img src={LogoKarawang} alt="Logo Karawang" className="w-full h-14" />
       </div>
+      <div>
+        <h1 className="text-4xl font-bold tracking-tight">
+          Penerima Bantuan Tidak Terdaftar
+        </h1>
+        <p className="text-blue-100 mt-2 text-lg">
+          Sistem Informasi Bantuan & Program Dukungan UMKM
+        </p>
+      </div>
+    </div>
+
+    {/* Tombol Kembali */}
+    <button
+      onClick={() => navigate(-1)}
+      className="px-5 py-3 bg-white text-blue-700 font-bold rounded-xl shadow-md hover:bg-blue-50 transition"
+    >
+      Kembali
+    </button>
+  </div>
+</div>
+
       
-      {/* ================= FILTER BAR ================= */}
-      <div className="bg-white shadow-md rounded-lg p-4 mb-6 flex flex-wrap items-center gap-3 border">
-        {/* 🔍 Search */}
-        <div className="flex items-center border rounded-lg px-3 py-2 w-64">
-          <Search size={18} className="text-gray-400 mr-2" />
-          <input
-            type="text"
-            placeholder="Cari nama / UMKM / produk..."
-            value={filters.search}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))
+{/* ================= FILTER BAR ================= */}
+<div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
+
+  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+
+    {/* 🔍 Pencarian */}
+    <div className="md:col-span-5">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Pencarian
+      </label>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Cari nama / UMKM / produk..."
+          value={filters.search}
+          onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
+          className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl text-gray-700 focus:ring-2 focus:ring-red-500"
+        />
+      </div>
+    </div>
+
+    {/* 📅 Tahun */}
+    <div className="md:col-span-2">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Tahun
+      </label>
+      <select
+        value={filters.tahun}
+        onChange={(e) => setFilters(prev => ({ ...prev, tahun: e.target.value, page: 1 }))}
+        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl"
+      >
+        <option value="">Semua Tahun</option>
+        {filterOptions.tahun.map((t) => (
+          <option key={t}>{t}</option>
+        ))}
+      </select>
+    </div>
+
+    {/* 🏙 Kecamatan */}
+    <div className="md:col-span-3">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Kecamatan
+      </label>
+      <select
+        value={filters.kecamatan}
+        onChange={(e) => setFilters(prev => ({ ...prev, kecamatan: e.target.value, page: 1 }))}
+        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl"
+      >
+        <option value="">Semua Kecamatan</option>
+        {filterOptions.kecamatan.map((k) => (
+          <option key={k}>{k}</option>
+        ))}
+      </select>
+    </div>
+
+    {/* 🧰 Jenis Bantuan */}
+    <div className="md:col-span-2">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Jenis Bantuan
+      </label>
+      <select
+        value={filters.jenis_alat_bantu}
+        onChange={(e) => setFilters(prev => ({ ...prev, jenis_alat_bantu: e.target.value, page: 1 }))}
+        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl"
+      >
+        <option value="">Semua Jenis Bantuan</option>
+        {filterOptions.jenis_alat_bantu.map((j) => (
+          <option key={j}>{j}</option>
+        ))}
+      </select>
+    </div>
+
+    {/* 🗂 Jenis Penerima */}
+    <div className="md:col-span-2">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Jenis Penerima
+      </label>
+      <select
+        value={filters.penerima}
+        onChange={(e) => setFilters(prev => ({ ...prev, penerima: e.target.value, page: 1 }))}
+        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl"
+      >
+        <option value="semua">🗂 Semua Penerima</option>
+        <option value="satu_kali">✅ Penerima 1x</option>
+        <option value="ganda">🔁 Penerima Ganda</option>
+      </select>
+    </div>
+
+    {/* 🔄 RESET */}
+    <div className="md:col-span-12 flex justify-end">
+      <button
+        onClick={handleReset}
+        className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition"
+      >
+        🔄 Reset
+      </button>
+    </div>
+  </div>
+</div>
+{/* ================= PAGINATION ATAS ================= */}
+{!loading && pagination?.totalPages > 1 && (
+  <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 mb-4">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+
+      <div className="text-sm text-gray-600 font-medium">
+        Halaman <strong className="text-red-600">{pagination.page}</strong> dari{" "}
+        <strong>{pagination.totalPages}</strong>
+        <span className="mx-2 text-gray-400">•</span>
+        Total Data:{" "}
+        <strong className="text-red-600">
+          {pagination.total?.toLocaleString("id-ID")}
+        </strong>
+      </div>
+
+      <div className="flex items-center gap-2">
+
+        {/* Prev Button */}
+        <button
+          onClick={handlePrev}
+          disabled={filters.page === 1}
+          className="px-5 py-3 border-2 border-gray-300 rounded-xl font-bold hover:bg-gray-50
+          disabled:opacity-40 disabled:cursor-not-allowed transition"
+        >
+          Sebelumnya
+        </button>
+
+        {/* Page Numbers */}
+        <div className="flex gap-1">
+          {[...Array(pagination.totalPages)].map((_, i) => {
+            const page = i + 1;
+
+            if (
+              page === 1 ||
+              page === pagination.totalPages ||
+              Math.abs(page - filters.page) <= 1
+            ) {
+              return (
+                <button
+                  key={page}
+                  onClick={() => setFilters(prev => ({ ...prev, page }))}
+                  className={`w-11 h-11 rounded-xl font-bold transition ${
+                    filters.page === page
+                      ? "bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg"
+                      : "border-2 border-gray-300 hover:bg-red-50"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
             }
-            className="w-full outline-none text-gray-700"
-          />
+
+            if (
+              page === filters.page - 2 ||
+              page === filters.page + 2
+            ) {
+              return (
+                <span key={page} className="px-2 text-gray-400">
+                  ...
+                </span>
+              );
+            }
+
+            return null;
+          })}
         </div>
 
-        {/* 📅 Tahun */}
-        <select
-          value={filters.tahun}
-          onChange={(e) =>
-            setFilters((prev) => ({ ...prev, tahun: e.target.value, page: 1 }))
-          }
-          className="border rounded-lg px-3 py-2 text-gray-700"
-        >
-          <option value="">Semua Tahun</option>
-          {filterOptions.tahun.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-
-        {/* 🏙️ Kecamatan */}
-        <select
-          value={filters.kecamatan}
-          onChange={(e) =>
-            setFilters((prev) => ({
-              ...prev,
-              kecamatan: e.target.value,
-              page: 1,
-            }))
-          }
-          className="border rounded-lg px-3 py-2 text-gray-700"
-        >
-          <option value="">Semua Kecamatan</option>
-          {filterOptions.kecamatan.map((k) => (
-            <option key={k} value={k}>
-              {k}
-            </option>
-          ))}
-        </select>
-
-        {/* 🧰 Jenis Alat Bantu */}
-        <select
-          value={filters.jenis_alat_bantu}
-          onChange={(e) =>
-            setFilters((prev) => ({
-              ...prev,
-              jenis_alat_bantu: e.target.value,
-              page: 1,
-            }))
-          }
-          className="border rounded-lg px-3 py-2 text-gray-700"
-        >
-          <option value="">Semua Jenis Bantuan</option>
-          {filterOptions.jenis_alat_bantu.map((j) => (
-            <option key={j} value={j}>
-              {j}
-            </option>
-          ))}
-        </select>
-
-        {/* 🧩 Jenis Penerima */}
-        <select
-          value={filters.penerima}
-          onChange={(e) =>
-            setFilters((prev) => ({
-              ...prev,
-              penerima: e.target.value,
-              page: 1,
-            }))
-          }
-          className="border rounded-lg px-3 py-2 text-gray-700"
-        >
-          <option value="semua">🗂 Semua Penerima</option>
-          <option value="satu_kali">✅ Penerima 1x</option>
-          <option value="ganda">🔁 Penerima Ganda</option>
-        </select>
-
-        {/* 🔄 Reset */}
+        {/* Next Button */}
         <button
-          onClick={handleReset}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+          onClick={handleNext}
+          disabled={filters.page === pagination.totalPages}
+          className="px-5 py-3 border-2 border-gray-300 rounded-xl font-bold hover:bg-gray-50
+          disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
-          🔄 Reset
+          Selanjutnya
         </button>
+
       </div>
+    </div>
+  </div>
+)}
+
 
       {/* ================= TABLE ================= */}
       {loading ? (
@@ -284,30 +390,7 @@ export default function BantuanTidakTerdaftarPage() {
         </div>
       )}
 
-      {/* ================= PAGINATION ================= */}
-      {pagination?.totalPages > 1 && (
-        <div className="flex justify-center items-center mt-6 gap-4">
-          <button
-            onClick={handlePrev}
-            disabled={filters.page === 1}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
-          >
-            ⬅️ Prev
-          </button>
 
-          <span className="text-gray-700 font-medium">
-            Halaman {pagination.page} dari {pagination.totalPages}
-          </span>
-
-          <button
-            onClick={handleNext}
-            disabled={filters.page === pagination.totalPages}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
-          >
-            Next ➡️
-          </button>
-        </div>
-      )}
     </div>
   );
 }

@@ -491,62 +491,81 @@ export const getBantuanSummary = async (req, res) => {
 
 
 export const getUMKMDuplikatByType = async (req, res) => {
-  const { type = "kombinasi", page = 1, limit = 50 } = req.query;
+  const { type = "kombinasi", page = 1, limit = 50, search = "" } = req.query;
   const offset = (page - 1) * limit;
 
   try {
-    let queryGroup = "";
+    let groupSelect = "";
+    let baseWhere = "WHERE nama != '' AND nama_usaha != ''";
+    let groupBy = "";
     let label = "";
-    
+
     // ==============================
-    // 🔹 Pilih tipe duplikasi
+    // 🔹 Tentukan tipe duplikasi
     // ==============================
     switch (type) {
       case "nama":
-        queryGroup = `
-          SELECT nama, COUNT(*) AS jumlah
-          FROM data_umkm
-          WHERE nama != ''
-          GROUP BY nama
-          HAVING COUNT(*) > 1
-          ORDER BY jumlah DESC
-          LIMIT ? OFFSET ?;
-        `;
+        groupSelect = "nama, COUNT(*) AS jumlah";
+        baseWhere = "WHERE nama != ''";
+        groupBy = "GROUP BY nama HAVING COUNT(*) > 1";
         label = "Nama sama, walau usaha/kecamatan berbeda";
         break;
 
       case "usaha":
-        queryGroup = `
-          SELECT nama_usaha, COUNT(*) AS jumlah
-          FROM data_umkm
-          WHERE nama_usaha != ''
-          GROUP BY nama_usaha
-          HAVING COUNT(*) > 1
-          ORDER BY jumlah DESC
-          LIMIT ? OFFSET ?;
-        `;
+        groupSelect = "nama_usaha, COUNT(*) AS jumlah";
+        baseWhere = "WHERE nama_usaha != ''";
+        groupBy = "GROUP BY nama_usaha HAVING COUNT(*) > 1";
         label = "Nama usaha sama, walau nama pelaku berbeda";
         break;
 
-      case "kombinasi":
       default:
-        queryGroup = `
-          SELECT nama, nama_usaha, kecamatan, desa, COUNT(*) AS jumlah
-          FROM data_umkm
-          WHERE nama != '' AND nama_usaha != ''
-          GROUP BY nama, nama_usaha, kecamatan, desa
-          HAVING COUNT(*) > 1
-          ORDER BY jumlah DESC
-          LIMIT ? OFFSET ?;
-        `;
+        groupSelect = "nama, nama_usaha, kecamatan, desa, COUNT(*) AS jumlah";
+        baseWhere = "WHERE nama != '' AND nama_usaha != ''";
+        groupBy = "GROUP BY nama, nama_usaha, kecamatan, desa HAVING COUNT(*) > 1";
         label = "Duplikasi kombinasi nama + nama_usaha + kecamatan + desa";
         break;
     }
 
     // ==============================
-    // 🔹 Ambil grup duplikat sesuai tipe
+    // 🔹 Tambah pencarian (opsional)
     // ==============================
-    const [groups] = await pool.query(queryGroup, [Number(limit), Number(offset)]);
+    let searchQuery = "";
+    if (search && search.trim() !== "") {
+      searchQuery = `
+        AND (
+          nama LIKE ${pool.escape("%" + search + "%")} OR
+          nama_usaha LIKE ${pool.escape("%" + search + "%")}
+        )
+      `;
+    }
+
+    // ==============================
+    // 🔹 Query total grup (COUNT)
+    // ==============================
+    const [totalGroups] = await pool.query(`
+      SELECT COUNT(*) AS total
+      FROM (
+        SELECT ${groupSelect.replace(", COUNT(*) AS jumlah", "")}
+        FROM data_umkm
+        ${baseWhere} ${searchQuery}
+        ${groupBy}
+      ) AS grouped;
+    `);
+
+    const total_group = totalGroups[0].total;
+    const total_page = Math.ceil(total_group / limit);
+
+    // ==============================
+    // 🔹 Ambil grup berdasarkan page
+    // ==============================
+    const [groups] = await pool.query(`
+      SELECT ${groupSelect}
+      FROM data_umkm
+      ${baseWhere} ${searchQuery}
+      ${groupBy}
+      ORDER BY jumlah DESC
+      LIMIT ? OFFSET ?;
+    `, [Number(limit), Number(offset)]);
 
     if (groups.length === 0) {
       return res.json({
@@ -554,7 +573,8 @@ export const getUMKMDuplikatByType = async (req, res) => {
         pagination: {
           current_page: Number(page),
           per_page: Number(limit),
-          total_group: 0
+          total_group,
+          total_page
         },
         data: [],
         keterangan: label
@@ -562,21 +582,25 @@ export const getUMKMDuplikatByType = async (req, res) => {
     }
 
     // ==============================
-    // 🔹 Buat kondisi untuk ambil data aslinya
+    // 🔹 Build kondisi untuk ambil data aslinya
     // ==============================
     let kondisi = "";
 
     if (type === "nama") {
       kondisi = groups.map(g => `nama = ${pool.escape(g.nama)}`).join(" OR ");
+
     } else if (type === "usaha") {
       kondisi = groups.map(g => `nama_usaha = ${pool.escape(g.nama_usaha)}`).join(" OR ");
+
     } else {
-      kondisi = groups.map(g => `
-        (nama = ${pool.escape(g.nama)} 
-         AND nama_usaha = ${pool.escape(g.nama_usaha)} 
-         AND kecamatan = ${pool.escape(g.kecamatan)} 
-         AND desa = ${pool.escape(g.desa)})
-      `).join(" OR ");
+      kondisi = groups
+        .map(g => `
+          (nama = ${pool.escape(g.nama)} 
+           AND nama_usaha = ${pool.escape(g.nama_usaha)} 
+           AND kecamatan = ${pool.escape(g.kecamatan)} 
+           AND desa = ${pool.escape(g.desa)})
+        `)
+        .join(" OR ");
     }
 
     // ==============================
@@ -592,14 +616,15 @@ export const getUMKMDuplikatByType = async (req, res) => {
     `);
 
     // ==============================
-    // 🔹 Kirim response
+    // 🔹 Kirim Response
     // ==============================
     res.json({
       success: true,
       pagination: {
         current_page: Number(page),
         per_page: Number(limit),
-        total_group: groups.length
+        total_group,
+        total_page
       },
       keterangan: label,
       data: duplikatData
@@ -613,6 +638,7 @@ export const getUMKMDuplikatByType = async (req, res) => {
     });
   }
 };
+
 
 
 export const getBantuanList = async (req, res) => {
@@ -1045,122 +1071,86 @@ export const getAnalisisTahunan = async (req, res) => {
 export const getBantuanTidakTerdaftarSummary = async (req, res) => {
   try {
     // =====================================================
-    // 1️⃣ Total penerima bantuan tidak terdaftar di tabel UMKM
+    // 1️⃣ Total penerima bantuan TIDAK TERDAFTAR di tabel UMKM
     // =====================================================
     const [[totalTidakTerdaftar]] = await pool.query(`
       SELECT COUNT(*) AS total_tidak_terdaftar
       FROM data_bantuan_umkm AS dbu
       LEFT JOIN data_umkm AS ui 
         ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
-      WHERE ui.nama IS NULL;
+      WHERE ui.id IS NULL;
     `);
 
     // =====================================================
-    // 2️⃣ Ringkasan tahunan (berapa banyak yang tidak terdaftar per tahun)
+    // 2️⃣ Ringkasan tahunan (jumlah tidak terdaftar per tahun)
     // =====================================================
     const [ringkasanTahunan] = await pool.query(`
       SELECT dbu.tahun, COUNT(*) AS jumlah_tidak_terdaftar
       FROM data_bantuan_umkm AS dbu
       LEFT JOIN data_umkm AS ui 
         ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
-      WHERE ui.nama IS NULL
+      WHERE ui.id IS NULL
       GROUP BY dbu.tahun
       ORDER BY dbu.tahun ASC;
     `);
 
     // =====================================================
-    // 3️⃣ Analisis tahunan bantuan VALID (lengkap & punya PIRT/Halal)
-    // =====================================================
-    const [bantuanValid] = await pool.query(`
-      SELECT tahun, COUNT(*) AS jumlah_bantuan_valid
-      FROM data_bantuan_umkm
-      WHERE nama != '' AND nik != '' AND nama_produk != '' AND
-            nama_umkm != '' AND alamat != '' AND kecamatan != '' AND
-            no_hp != '' AND nib != '' AND jenis_alat_bantu != '' AND
-            tahun != '' AND keterangan != ''
-            AND (UPPER(no_pirt) LIKE 'PIRT%' OR UPPER(no_pirt) LIKE 'P-IRT%' OR UPPER(no_pirt) LIKE 'P IRT%')
-            AND (no_halal NOT LIKE '0' AND no_halal NOT LIKE '-' AND no_halal != '')
-      GROUP BY tahun ORDER BY tahun ASC;
-    `);
-
-    // =====================================================
-    // 4️⃣ Distribusi jenis bantuan per tahun
-    // =====================================================
-    const [distribusiBantuan] = await pool.query(`
-      SELECT tahun, jenis_alat_bantu, COUNT(*) AS jumlah_penerima
-      FROM data_bantuan_umkm
-      WHERE jenis_alat_bantu != ''
-      GROUP BY tahun, jenis_alat_bantu
-      ORDER BY tahun ASC, jumlah_penerima DESC;
-    `);
-
-    // =====================================================
-    // 5️⃣ Penerima bantuan 1x dan yang ganda
+    // 3️⃣ Penerima bantuan 1x (YANG TIDAK TERDAFTAR SAJA)
     // =====================================================
     const [[total1x]] = await pool.query(`
       SELECT COUNT(*) AS total_1x
       FROM (
-        SELECT nama, nik, COUNT(*) AS jumlah_bantuan
-        FROM data_bantuan_umkm
-        GROUP BY nama, nik
+        SELECT TRIM(UPPER(dbu.nama)) AS nama_normalized
+        FROM data_bantuan_umkm AS dbu
+        LEFT JOIN data_umkm ui 
+          ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
+        WHERE ui.id IS NULL
+        GROUP BY TRIM(UPPER(dbu.nama))
         HAVING COUNT(*) = 1
       ) AS x;
     `);
 
+    // =====================================================
+    // 4️⃣ Penerima bantuan GANDA (YANG TIDAK TERDAFTAR SAJA)
+    // =====================================================
     const [[totalGanda]] = await pool.query(`
       SELECT COUNT(*) AS total_ganda
       FROM (
-        SELECT nama, nik, COUNT(*) AS jumlah_bantuan
-        FROM data_bantuan_umkm
-        GROUP BY nama, nik
+        SELECT TRIM(UPPER(dbu.nama)) AS nama_normalized
+        FROM data_bantuan_umkm AS dbu
+        LEFT JOIN data_umkm ui 
+          ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
+        WHERE ui.id IS NULL
+        GROUP BY TRIM(UPPER(dbu.nama))
         HAVING COUNT(*) > 1
       ) AS y;
     `);
 
     // =====================================================
-    // 🔚 Respons ringkas & analitik
+    // 🔚 RESPONSE
     // =====================================================
     res.json({
       success: true,
       data: {
         total_tidak_terdaftar: totalTidakTerdaftar.total_tidak_terdaftar,
         ringkasan_tahunan: ringkasanTahunan,
-        analisis_tahunan: {
-          valid: bantuanValid.length,
-          distribusi: distribusiBantuan.length,
-        },
         duplikasi: {
           penerima_1x: total1x.total_1x,
           penerima_ganda: totalGanda.total_ganda,
         },
-        analisis: {
-          keterangan:
-            "Data ini menganalisis penerima bantuan yang belum tercatat sebagai UMKM terdaftar di sistem, serta distribusi bantuan berdasarkan tahun, validitas profil, dan pola penerimaan bantuan.",
-          sumber_data: ["data_bantuan_umkm", "data_umkm"],
-          dasar_perhitungan: {
-            total_tidak_terdaftar:
-              "Jumlah penerima bantuan yang belum ditemukan di tabel data_umkm (pencocokan berbasis nama).",
-            ringkasan_tahunan:
-              "Distribusi jumlah penerima bantuan tidak terdaftar per tahun.",
-            analisis_tahunan:
-              "Menampilkan tren bantuan lengkap dan valid berdasarkan kelengkapan data (PIRT dan Halal).",
-            duplikasi:
-              "Menunjukkan jumlah penerima bantuan satu kali dan yang menerima lebih dari satu kali (ganda).",
-          },
-          catatan:
-            "Data ini membantu mengidentifikasi potensi UMKM penerima bantuan yang belum terdaftar resmi di database utama untuk verifikasi dan pembaruan data di kemudian hari.",
-        },
       },
     });
+
   } catch (err) {
     console.error("❌ getBantuanTidakTerdaftarSummary:", err.message);
     res.status(500).json({
       success: false,
-      message: "Gagal mengambil data ringkasan bantuan tidak terdaftar.",
+      message: "Gagal mengambil summary tidak terdaftar.",
       error: err.message,
     });
   }
 };
+
 
 export const getBantuanTidakTerdaftarList = async (req, res) => {
   try {
@@ -1178,10 +1168,10 @@ export const getBantuanTidakTerdaftarList = async (req, res) => {
     const params = [];
 
     // ==========================================================
-    // Base Query
+    // Base Query (FIX: window function berdasarkan NAMA)
     // ==========================================================
     let sql = `
-      SELECT DISTINCT
+      SELECT 
         dbu.id,
         dbu.nama,
         dbu.nik,
@@ -1196,24 +1186,33 @@ export const getBantuanTidakTerdaftarList = async (req, res) => {
         dbu.jenis_alat_bantu,
         dbu.tahun,
         dbu.keterangan,
-        COUNT(dbu.nama) OVER (PARTITION BY dbu.nama, dbu.nik) AS jumlah_bantuan
+        COUNT(*) OVER (
+          PARTITION BY TRIM(UPPER(dbu.nama))
+        ) AS total
       FROM data_bantuan_umkm AS dbu
       LEFT JOIN data_umkm AS ui 
         ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
       WHERE ui.id IS NULL
-        AND dbu.nama IS NOT NULL AND TRIM(dbu.nama) <> ''
+        AND dbu.nama IS NOT NULL 
+        AND TRIM(dbu.nama) <> ''
     `;
 
-    // 🔍 Filter umum
-    if (search) {
-      sql += ` AND (
-        dbu.nama LIKE ? OR 
-        dbu.nama_umkm LIKE ? OR 
-        dbu.nama_produk LIKE ? OR 
-        dbu.kecamatan LIKE ?
-      )`;
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
-    }
+    // Filters
+if (search) {
+  sql += ` AND (
+    TRIM(UPPER(dbu.nama)) = TRIM(UPPER(?))   -- FOKUSKAN NAMA IDENTIK
+    OR dbu.nama LIKE ?
+    OR dbu.nama_umkm LIKE ?
+    OR dbu.nama_produk LIKE ?
+    OR dbu.kecamatan LIKE ?
+  )`;
+  params.push(
+    search,                         // untuk pencocokan nama identik
+    `%${search}%`, `%${search}%`,
+    `%${search}%`, `%${search}%`
+  );
+}
+
 
     if (kecamatan) {
       sql += ` AND dbu.kecamatan = ?`;
@@ -1231,53 +1230,50 @@ export const getBantuanTidakTerdaftarList = async (req, res) => {
     }
 
     // ==========================================================
-    // 🧩 Filter penerima (1x / ganda)
+    // Filtering satu_kali / ganda (FIXED)
     // ==========================================================
     if (penerima === "satu_kali") {
       sql += `
-        AND dbu.nama IN (
-          SELECT nama FROM (
-            SELECT dbu2.nama
-            FROM data_bantuan_umkm AS dbu2
-            LEFT JOIN data_umkm AS ui2
-              ON TRIM(UPPER(dbu2.nama)) = TRIM(UPPER(ui2.nama))
-            WHERE ui2.id IS NULL
-            GROUP BY dbu2.nama
+        AND TRIM(UPPER(dbu.nama)) IN (
+          SELECT nama_normalized FROM (
+            SELECT TRIM(UPPER(nama)) AS nama_normalized
+            FROM data_bantuan_umkm
+            GROUP BY TRIM(UPPER(nama))
             HAVING COUNT(*) = 1
           ) AS sub
         )
       `;
     } else if (penerima === "ganda") {
       sql += `
-        AND dbu.nama IN (
-          SELECT nama FROM (
-            SELECT dbu3.nama
-            FROM data_bantuan_umkm AS dbu3
-            LEFT JOIN data_umkm AS ui3
-              ON TRIM(UPPER(dbu3.nama)) = TRIM(UPPER(ui3.nama))
-            WHERE ui3.id IS NULL
-            GROUP BY dbu3.nama
+        AND TRIM(UPPER(dbu.nama)) IN (
+          SELECT nama_normalized FROM (
+            SELECT TRIM(UPPER(nama)) AS nama_normalized
+            FROM data_bantuan_umkm
+            GROUP BY TRIM(UPPER(nama))
             HAVING COUNT(*) > 1
           ) AS sub
         )
       `;
     }
 
-    sql += ` ORDER BY dbu.tahun DESC, dbu.kecamatan ASC LIMIT ? OFFSET ?`;
+    // Order + paging
+    sql += ` ORDER BY TRIM(UPPER(dbu.nama)) ASC, dbu.tahun DESC LIMIT ? OFFSET ?`;
+
     params.push(parseInt(limit), parseInt(offset));
 
     const [rows] = await pool.query(sql, params);
 
     // ==========================================================
-    // 🧮 Hitung total data
+    // Hitung total data (FIX TERPENTING — pakai COUNT(*))
     // ==========================================================
     let countSql = `
-      SELECT COUNT(DISTINCT dbu.id) AS total
+      SELECT COUNT(*) AS total
       FROM data_bantuan_umkm AS dbu
       LEFT JOIN data_umkm AS ui 
         ON TRIM(UPPER(dbu.nama)) = TRIM(UPPER(ui.nama))
       WHERE ui.id IS NULL
-        AND dbu.nama IS NOT NULL AND TRIM(dbu.nama) <> ''
+        AND dbu.nama IS NOT NULL 
+        AND TRIM(dbu.nama) <> ''
     `;
     const countParams = [];
 
@@ -1308,28 +1304,22 @@ export const getBantuanTidakTerdaftarList = async (req, res) => {
 
     if (penerima === "satu_kali") {
       countSql += `
-        AND dbu.nama IN (
-          SELECT nama FROM (
-            SELECT dbu2.nama
-            FROM data_bantuan_umkm AS dbu2
-            LEFT JOIN data_umkm AS ui2
-              ON TRIM(UPPER(dbu2.nama)) = TRIM(UPPER(ui2.nama))
-            WHERE ui2.id IS NULL
-            GROUP BY dbu2.nama
+        AND TRIM(UPPER(dbu.nama)) IN (
+          SELECT nama_normalized FROM (
+            SELECT TRIM(UPPER(nama)) AS nama_normalized
+            FROM data_bantuan_umkm
+            GROUP BY TRIM(UPPER(nama))
             HAVING COUNT(*) = 1
           ) AS sub
         )
       `;
     } else if (penerima === "ganda") {
       countSql += `
-        AND dbu.nama IN (
-          SELECT nama FROM (
-            SELECT dbu3.nama
-            FROM data_bantuan_umkm AS dbu3
-            LEFT JOIN data_umkm AS ui3
-              ON TRIM(UPPER(dbu3.nama)) = TRIM(UPPER(ui3.nama))
-            WHERE ui3.id IS NULL
-            GROUP BY dbu3.nama
+        AND TRIM(UPPER(dbu.nama)) IN (
+          SELECT nama_normalized FROM (
+            SELECT TRIM(UPPER(nama)) AS nama_normalized
+            FROM data_bantuan_umkm
+            GROUP BY TRIM(UPPER(nama))
             HAVING COUNT(*) > 1
           ) AS sub
         )
@@ -1338,9 +1328,7 @@ export const getBantuanTidakTerdaftarList = async (req, res) => {
 
     const [[{ total }]] = await pool.query(countSql, countParams);
 
-    // ==========================================================
-    // 📦 Response
-    // ==========================================================
+    // Response
     res.json({
       success: true,
       total,
@@ -1361,6 +1349,7 @@ export const getBantuanTidakTerdaftarList = async (req, res) => {
     });
   }
 };
+
 
 export const getBantuanTidakTerdaftarFilters = async (req, res) => {
   try {

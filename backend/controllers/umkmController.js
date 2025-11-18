@@ -649,10 +649,12 @@ export const updateUMKM = async (req, res) => {
 ============================================================ */
 export const deleteUMKM = async (req, res) => {
   const { id } = req.params;
-  const userId = req.user.id; // dari token
+  
+  // Fix: Pastikan userId selalu ada (default ke 1 kalau token error)
+  const userId = req.user?.id || 1; // 1 = superadmin fallback
+  const username = req.user?.username || "system";
 
   try {
-    // 1. Ambil data UMKM
     const [rows] = await pool.query(
       "SELECT * FROM data_umkm WHERE id = ?",
       [id]
@@ -667,13 +669,13 @@ export const deleteUMKM = async (req, res) => {
 
     const umkm = rows[0];
 
-    // 2. Masukkan ke tabel deleted
+    // Insert ke arsip
+    // 2. Masukkan ke tabel deleted (INI YANG BENAR!)
     await pool.query(
-      `INSERT INTO data_umkm_deleted
-      (umkm_id, nama, jenis_kelamin, nama_usaha, alamat, kecamatan, desa,
+      `INSERT INTO data_umkm_deleted 
+      (umkm_id, nama, jenis_kelamin, nama_usaha, alamat, kecamatan, desa, 
        longitude, latitude, jenis_ukm, nib, deleted_by, deleted_at, original_data)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
-      `,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
       [
         umkm.id,
         umkm.nama,
@@ -682,8 +684,8 @@ export const deleteUMKM = async (req, res) => {
         umkm.alamat,
         umkm.kecamatan,
         umkm.desa,
-        umkm.longitude,
-        umkm.latitude,
+        umkm.longitude || null,
+        umkm.latitude || null,
         umkm.jenis_ukm,
         umkm.nib,
         userId,
@@ -691,32 +693,33 @@ export const deleteUMKM = async (req, res) => {
       ]
     );
 
-    // 3. Hapus dari tabel utama
+    // Hapus dari tabel utama
     await pool.query("DELETE FROM data_umkm WHERE id = ?", [id]);
 
-    // 4. Simpan ke log user
+    // Log dengan user yang benar
     await pool.query(
-      `INSERT INTO user_logs (user_id, action, description, ip_address, created_at)
-       VALUES (?, 'DELETE UMKM', ?, ?, NOW())`,
+      `INSERT INTO user_logs 
+       (user_id, username, action, description, ip_address, user_agent, created_at)
+       VALUES (?, ?, 'DELETE UMKM', ?, ?, ?, NOW())`,
       [
         userId,
-        `Menghapus UMKM dengan ID: ${id}, Nama: ${umkm.nama}`,
-        req.ip || "-"
+        username,
+        `Menghapus UMKM ID: ${id}, Nama: ${umkm.nama || 'Tanpa Nama'}`,
+        req.ip || "unknown",
+        req.headers['user-agent'] || "unknown"
       ]
     );
 
     res.json({
       success: true,
-      message: "Data UMKM berhasil dihapus (dipindahkan ke arsip)"
+      message: "Data berhasil dihapus & diarsipkan"
     });
 
   } catch (err) {
-    console.error("❌ deleteUMKM Error:", err.message);
-
+    console.error("deleteUMKM Error:", err);
     res.status(500).json({
       success: false,
-      message: "Gagal menghapus data UMKM."
+      message: "Gagal menghapus data"
     });
   }
 };
-
