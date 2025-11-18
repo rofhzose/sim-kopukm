@@ -265,7 +265,7 @@ export default function BantuanSummary() {
         <div className="flex justify-center">
           <button
             onClick={() => navigate("/bantuan")}
-            className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-xl flex items-center gap-3"
+            className="px-8 py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all shadow-md hover:shadow-xl flex items-center gap-3"
           >
             <Activity className="w-5 h-5" />
             Lihat Data Bantuan Lengkap
