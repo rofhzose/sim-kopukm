@@ -394,6 +394,7 @@ const handleCreateUMKM = async (formData) => {
     limit={pagination.limit}
     deletingId={deletingId}           // <-- kirim state loading
     onDelete={handleDelete}  
+    openEditModal={openEditModal}
              // <-- kirim fungsi delete
   />
         )}
