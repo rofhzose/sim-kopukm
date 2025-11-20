@@ -46,7 +46,7 @@ const allowedOrigins = [
   "http://127.0.0.1:3000",
   "http://localhost:3001",   // ✅ WAJIB TAMBAH
   "http://127.0.0.1:3001",
-  "http://127.0.0.1:4849" 
+  "http://127.0.0.1:4849",
   "https://himavera.my.id",
   "https://www.himavera.my.id",
   "https://api.himavera.my.id",
