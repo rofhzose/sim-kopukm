@@ -47,6 +47,14 @@ const allowedOrigins = [
   "http://localhost:3001",   // ✅ WAJIB TAMBAH
   "http://127.0.0.1:3001",
   "http://127.0.0.1:4849" 
+  "https://himavera.my.id",
+  "https://www.himavera.my.id",
+  "https://api.himavera.my.id",
+  "http://api.himavera.my.id",
+  "http://72.61.208.1:3000",
+  "http://72.61.208.1:3001",
+  "http://72.61.208.1:2211",
+  
 ];
 
 
@@ -178,7 +186,7 @@ io.on("connection", (socket) => {
 // ================================
 // 🔹 Jalankan server
 // ================================
-const HOST = NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1";
+const HOST = NODE_ENV === "production" ? "0.0.0.0" : "72.61.208.1";
 
 server.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on http://${HOST}:${PORT}`);
