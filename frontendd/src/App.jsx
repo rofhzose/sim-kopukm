@@ -13,6 +13,7 @@ import KoperasiPage from "./pages/KoperasiPage";
 import KoperasiDataPage from "./pages/KoperasiDataPage";
 import DuplikatKoperasi from "./pages/DuplikatKoperasi";
 import DuplikatKoperasiDetails from "./pages/DuplikatKoperasiDetails";
+import Sekretariat from "./pages/SekretariatPage";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/koperasidata" element={<KoperasiDataPage />} />
           <Route path="/duplikat-koperasi" element={<DuplikatKoperasi />} />
           <Route path="/duplikat-koperasi/details" element={<DuplikatKoperasiDetails />} />
+          <Route path="/sekretariat" element={<Sekretariat />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Trash2, Loader2  } from "lucide-react";
 
-export default function TableUMKM({ data, page, limit }) {
+export default function TableUMKM({ data, page, limit, deletingId, onDelete, openEditModal }) {
   const tableRef = useRef(null);
   const fakeScrollRef = useRef(null);
 
@@ -63,7 +63,7 @@ export default function TableUMKM({ data, page, limit }) {
         <div
           ref={tableRef}
           className="overflow-x-auto"
-          style={{ maxHeight: "70vh" }}
+          style={{ maxHeight: "100vh" }}
         >
           <table className="min-w-full">
            <thead className="sticky top-0 z-20">
@@ -154,18 +154,33 @@ export default function TableUMKM({ data, page, limit }) {
                     <td className="px-6 py-4">
   <div className="flex gap-2">
 
-    <button
-      onClick={() => window.location.href = `/umkm/update/${item.id}`}
-      className="px-3 py-1 bg-yellow-500 text-white rounded-lg text-xs font-bold hover:bg-yellow-600 transition"
-    >
-      Update
-    </button>
+<button
+  onClick={() => openEditModal(item.id)}  // Ganti ini!
+  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold rounded-lg transition"
+>
+  Edit
+</button>
 
-    <button
-      onClick={() => handleDelete(item.id)}
-      className="px-3 py-1 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition"
+<button
+      onClick={() => onDelete(item.id, item.nama || item.nama_usaha || "Data UMKM")}
+      disabled={deletingId === item.id}
+      className={`px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${
+        deletingId === item.id
+          ? "bg-gray-400 cursor-not-allowed"
+          : "bg-red-600 hover:bg-red-700 text-white"
+      }`}
     >
-      Delete
+      {deletingId === item.id ? (
+        <>
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Menghapus...
+        </>
+      ) : (
+        <>
+          <Trash2 className="w-4 h-4" />
+          Delete
+        </>
+      )}
     </button>
 
   </div>

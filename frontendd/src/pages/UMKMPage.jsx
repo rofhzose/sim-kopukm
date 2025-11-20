@@ -3,14 +3,73 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import TableUMKM from "../components/SummaryTable";
 import UMKMInput from "../components/UMKMInput";
-import { Search, Filter, RefreshCw, MapPin, Building2, Loader2, Plus } from "lucide-react";
+import UMKMEditModal from "../components/UMKMEditModal";
+import { Search, Filter, RefreshCw, MapPin, Building2, Loader2, Plus, Trash2 } from "lucide-react";
+import LogoKarawang from "../assets/logo_karawang.png";
+import Swal from "sweetalert2";
 
 export default function UMKMPage() {
   const [data, setData] = useState([]);
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
   const navigate = useNavigate();
+  const [editModal, setEditModal] = useState({ isOpen: false, umkmId: null });
+
+// Fungsi buka modal
+const openEditModal = (id) => {
+  setEditModal({ isOpen: true, umkmId: id });
+};
+
+const closeEditModal = () => {
+  setEditModal({ isOpen: false, umkmId: null });
+};
+
+const handleDelete = async (id, nama = "Data UMKM") => {
+  const namaTampilan = nama || "Data UMKM";
+
+  const result = await Swal.fire({
+    title: 'Hapus Data UMKM?',
+    html: `Anda akan menghapus:<br><strong>"${namaTampilan}"</strong><br><br>Tindakan ini <strong>TIDAK DAPAT</strong> dibatalkan!`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Ya, Hapus!',
+    cancelButtonText: 'Batal'
+  });
+
+  if (!result.isConfirmed) return;
+
+  setDeletingId(id); // tampilkan loading di tombol
+
+  try {
+    const res = await axiosInstance.delete(`/umkm/${id}`);
+
+    if (res.data.success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Terhapus!',
+        text: `Berhasil menghapus "${namaTampilan}"`,
+        confirmButtonColor: '#3085d6'
+      });
+      // Refresh data tanpa reload halaman
+      fetchData();
+    }
+  } catch (err) {
+    console.error(err);
+    const msg = err.response?.data?.message || "Gagal menghapus data UMKM";
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal!',
+      text: msg,
+      confirmButtonColor: '#d33'
+    });
+  } finally {
+    setDeletingId(null);
+  }
+};
 
   // Filter options
   const [kecamatanList, setKecamatanList] = useState([]);
@@ -81,12 +140,22 @@ const handleCreateUMKM = async (formData) => {
     const res = await axiosInstance.post("/umkm", formData);
 
     if (res.data.success) {
-      alert("Berhasil tambah UMKM!");
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Data UMKM berhasil ditambahkan',
+        confirmButtonColor: '#3085d6'
+      });
       fetchData();
       setShowInput(false);
     }
   } catch (err) {
-    alert(err.response?.data?.message || "Gagal menambahkan data UMKM");
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal!',
+      text: err.response?.data?.message || 'Gagal menambahkan data UMKM',
+      confirmButtonColor: '#d33'
+    });
   }
 };
 
@@ -107,6 +176,7 @@ const handleCreateUMKM = async (formData) => {
       setFilters({ ...filters, page: filters.page + 1 });
   };
 
+
   const handlePrev = () => {
     if (filters.page > 1) setFilters({ ...filters, page: filters.page - 1 });
   };
@@ -121,8 +191,8 @@ const handleCreateUMKM = async (formData) => {
         <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 shadow-2xl text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="bg-white bg-opacity-20 p-4 rounded-xl backdrop-blur-sm">
-                <Building2 className="w-10 h-10" />
+              <div className="bg-white bg-opacity-20 h-16  flex items-center justify-center rounded-xl backdrop-blur-sm">
+                <img src={LogoKarawang} alt="Logo Karawang" className="w-full h-14" />
               </div>
               <div>
                 <h1 className="text-4xl font-bold tracking-tight">
@@ -318,9 +388,26 @@ const handleCreateUMKM = async (formData) => {
             </button>
           </div>
         ) : (
-          <TableUMKM data={data} page={pagination.page} limit={pagination.limit} />
+<TableUMKM 
+    data={data} 
+    page={pagination.page} 
+    limit={pagination.limit}
+    deletingId={deletingId}           // <-- kirim state loading
+    onDelete={handleDelete}  
+    openEditModal={openEditModal}
+             // <-- kirim fungsi delete
+  />
         )}
+
+        <UMKMEditModal
+  isOpen={editModal.isOpen}
+  onClose={closeEditModal}
+  umkmId={editModal.umkmId}
+  onSuccess={fetchData}  // refresh tabel setelah sukses
+/>
       </div>
+
+      
     </div>
   );
 }

@@ -302,38 +302,34 @@ export default function UMKMSummary() {
        {/* BAR CHART KECAMATAN (VERTIKAL KIRI) */}
 <div className="mb-8">
   <ChartCard title="Sebaran UMKM per Kecamatan" icon={Building2}>
-    <ResponsiveContainer width="100%" height={500}>
-      <BarChart 
-        data={chartKecamatan}
-        layout="vertical"   // 🔥 Biar nama kecamatan ada di kiri dan kebaca
-      >
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-        
-        {/* X = total UMKM */}
-        <XAxis type="number" tick={{ fontSize: 12 }} />
-        
-        {/* Y = nama kecamatan */}
-        <YAxis 
-          type="category" 
-          dataKey="kecamatan" 
-          width={150}          // 🔥 Tambahin biar teks panjang tetap kebaca
-          tick={{ fontSize: 12 }} 
-        />
+<ResponsiveContainer width="100%" height={chartKecamatan.length * 35}>
+  <BarChart data={chartKecamatan} layout="vertical">
+    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
 
-        <Tooltip 
-          contentStyle={{
-            backgroundColor: "#fff",
-            border: "2px solid #3b82f6",
-            borderRadius: "8px",
-            fontWeight: 600
-          }}
-          formatter={(v) => v.toLocaleString("id-ID")}
-        />
-        <Legend />
-        
-        <Bar dataKey="total" fill="#3b82f6" radius={[0, 8, 8, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <XAxis type="number" />
+
+    <YAxis
+      type="category"
+      dataKey="kecamatan"
+      width={180}
+      interval={0}               // <-- bikin semua label muncul
+      tick={{ fontSize: 12 }}
+    />
+
+    <Tooltip 
+      contentStyle={{
+        backgroundColor: "#fff",
+        border: "2px solid #3b82f6",
+        borderRadius: "8px",
+        fontWeight: 600
+      }}
+      formatter={(v) => v.toLocaleString("id-ID")}
+    />
+    <Legend />
+    <Bar dataKey="total" fill="#3b82f6" radius={[0, 8, 8, 0]} />
+  </BarChart>
+</ResponsiveContainer>
+
   </ChartCard>
 </div>
 
