@@ -39,8 +39,11 @@ const accessLogStream = fs.createWriteStream(
 // ================================
 const allowedOrigins = [
 
-"http://himavera.my.id",  
-"http://72.61.208.1",
+  "https://himavera.my.id",
+  "http://himavera.my.id",
+  "https://www.himavera.my.id",
+  "http://www.himavera.my.id",
+  "http://72.61.208.1",
   "http://72.61.208.1:4849",
   "http://72.61.208.1:3000",
   "http://72.61.208.1:3001",
