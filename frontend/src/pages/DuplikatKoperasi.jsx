@@ -18,9 +18,9 @@ export default function DuplikatKoperasi() {
   const [filters, setFilters] = useState({ page: qsPage, limit: qsLimit });
 
   const endpoints = [
-    "/api/dashboard/koperasi-duplikat",
     "/dashboard/koperasi-duplikat",
-    "/api/koperasi-duplikat",
+    "/dashboard/koperasi-duplikat",
+    "/koperasi-duplikat",
     "/koperasi-duplikat",
   ];
 

@@ -43,9 +43,9 @@ export default function OverviewDashboard() {
 
       // try several endpoints (fallback) to match backend mounting
       const endpoints = [
-        "/api/dashboard/koperasi-summary",
         "/dashboard/koperasi-summary",
-        "/api/koperasi-summary",
+        "/dashboard/koperasi-summary",
+        "/koperasi-summary",
         "/koperasi-summary",
       ];
 

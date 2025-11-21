@@ -20,11 +20,11 @@ export default function DuplikatKoperasiDetails() {
   const endpoints = [
     "/dashboard/koperasi-duplikat/details",
     "/dashboard/koperasi-duplikat-details",
-    "/api/dashboard/koperasi-duplikat/details",
-    "/api/dashboard/koperasi-duplikat-details",
-    "/api/koperasi-duplikat/details",
+    "/dashboard/koperasi-duplikat/details",
+    "/dashboard/koperasi-duplikat-details",
     "/koperasi-duplikat/details",
-    "/api/koperasi-duplikat-details",
+    "/koperasi-duplikat/details",
+    "/koperasi-duplikat-details",
     "/koperasi-duplikat-details",
   ];
 
