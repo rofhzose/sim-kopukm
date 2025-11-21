@@ -41,6 +41,7 @@ const allowedOrigins = [
 
   "https://himavera.my.id",
   "http://himavera.my.id",
+  "https://api.himavera.my.id",
   "https://www.himavera.my.id",
   "http://www.himavera.my.id",
   "http://72.61.208.1",
