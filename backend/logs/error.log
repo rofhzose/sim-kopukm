@@ -594,3 +594,5 @@
 [2025-11-17T16:22:21.930Z] 404 GET /api/api/dashboard/koperasi-duplikat?limit=50&offset=0 - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-duplikat?limit=50&offset=0
 [2025-11-19T21:05:01.446Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
 [2025-11-19T21:05:01.450Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
+[2025-11-21T11:09:03.842Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
+[2025-11-21T11:09:03.847Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
