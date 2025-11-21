@@ -596,3 +596,12 @@
 [2025-11-19T21:05:01.450Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
 [2025-11-21T11:09:03.842Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
 [2025-11-21T11:09:03.847Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
+[2025-11-21T16:20:39.292Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
+[2025-11-21T16:21:05.076Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
+[2025-11-21T16:22:13.734Z] 500 OPTIONS /api/auth/login - Not allowed by CORS
+[2025-11-21T16:22:31.693Z] 500 OPTIONS /api/auth/login - Not allowed by CORS
+[2025-11-21T16:23:03.986Z] 500 OPTIONS /api/auth/login - Not allowed by CORS
+[2025-11-21T16:31:20.002Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
+[2025-11-21T16:31:28.788Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
+[2025-11-21T16:38:29.394Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
+[2025-11-21T16:38:32.388Z] 404 GET /api/api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/api/dashboard/koperasi-summary
