@@ -38,10 +38,7 @@ const accessLogStream = fs.createWriteStream(
 // 🔹 Allowed Origins (FIXED)
 // ================================
 const allowedOrigins = [
-  "https://khfdz.my.id",
-  "https://www.khfdz.my.id",
-  "https://api.khfdz.my.id",
-  "http://api.khfdz.my.id",
+
   "http://localhost:3000",
   "http://127.0.0.1:3000",
   "http://localhost:3001",   // ✅ WAJIB TAMBAH
@@ -186,7 +183,7 @@ io.on("connection", (socket) => {
 // ================================
 // 🔹 Jalankan server
 // ================================
-const HOST = NODE_ENV === "production" ? "0.0.0.0" : "72.61.208.1";
+const HOST = NODE_ENV === "production" ? "0.0.0.0" : "localhost";
 
 server.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on http://${HOST}:${PORT}`);

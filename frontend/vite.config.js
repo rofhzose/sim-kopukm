@@ -15,10 +15,10 @@ export default defineConfig({
     open: false,           // ❌ Jangan auto buka browser
     allowedHosts: [        // ✅ Izinkan akses dari domain publik kamu
       'localhost',
-      '10.165.62.218',
-      'www.khfdz.my.id',
-      'khfdz.my.id',
-      'api.khfdz.my.id'
+      '72.61.208.1',
+      'www.himavera.my.id',
+      'himavera.my.id',
+      'api.himavera.my.id'
     ],
   },
 })
