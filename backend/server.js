@@ -48,6 +48,11 @@ const allowedOrigins = [
   "http://72.61.208.1:4849",
   "http://72.61.208.1:3000",
   "http://72.61.208.1:3001",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:3001",   // ✅ WAJIB TAMBAH
+  "http://127.0.0.1:3001",
+  "http://127.0.0.1:4849",
   
 ];
 
@@ -180,7 +185,7 @@ io.on("connection", (socket) => {
 // ================================
 // 🔹 Jalankan server
 // ================================
-const HOST = NODE_ENV === "production" ? "0.0.0.0" : "72.61.208.1";
+const HOST = NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1";
 
 server.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on http://${HOST}:${PORT}`);
