@@ -13,7 +13,7 @@ import KoperasiPage from "./pages/KoperasiPage";
 import KoperasiDataPage from "./pages/KoperasiDataPage";
 import DuplikatKoperasi from "./pages/DuplikatKoperasi";
 import DuplikatKoperasiDetails from "./pages/DuplikatKoperasiDetails";
-import DokumenKesekretariatan, { DocumentPage } from "./pages/DokumenKesekretariatan";
+import DokumenKesekretariatan from "./pages/DokumenKesekretariatan";
 import SOTKPage from "./pages/SOTKPage";
 import RkaPage from "./pages/RkaPage";
 import RenstraPage from "./pages/RenstraPage";
@@ -58,7 +58,6 @@ function App() {
           <Route path="/duplikat-koperasi" element={<DuplikatKoperasi />} />
           <Route path="/duplikat-koperasi/details" element={<DuplikatKoperasiDetails />} />
           <Route path="/sekretariat" element={<DokumenKesekretariatan />} />
-          <Route path="/dokumen/:slug" element={<DocumentPage />} />
           <Route path="/dokumen/sotk" element={<SOTKPage />} />
           <Route path="/dokumen/rka" element={<RkaPage />} />
           <Route path="/dokumen/renstra" element={<RenstraPage />} />
