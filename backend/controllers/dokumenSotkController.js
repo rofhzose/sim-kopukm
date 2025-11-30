@@ -115,4 +115,3 @@ export const remove = async (req, res) => {
     res.status(500).json({ success: false, message: "Gagal menghapus data" });
   }
 };
-

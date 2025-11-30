@@ -18,6 +18,8 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import koperasiRoute from "./routes/koperasiRoutes.js";
 import umkmRoute from "./routes/umkmRoutes.js";
 import dokumenSotkRoutes from "./routes/dokumenSotk.js";
+import hirarkiRoutes from "./routes/hirarkiRoutes.js";
+import programRoutes from "./routes/programRoutes.js";
 
 dotenv.config();
 
@@ -166,7 +168,9 @@ app.use("/api/dashboard", koperasiRoute);
 app.use("/api", koperasiRoute);
 app.use("/api", umkmRoute);
 app.use("/api/dokumen/sotk", dokumenSotkRoutes);
-
+app.use("/api/hirarki", hirarkiRoutes);
+app.use("/hirarki", hirarkiRoutes);
+app.use("/api/programs", programRoutes);
 // ================================
 // 🔹 Handler 404 (after routes)
 // ================================

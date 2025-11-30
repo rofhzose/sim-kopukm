@@ -288,7 +288,7 @@ export default function SotkPage() {
 
             <div className="flex items-center gap-3">
               <button type="submit" className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700"><Plus className="w-4 h-4" /> Upload</button>
-              <div className="text-sm text-gray-500">Maks 10MB. Tipe: PDF, DOC, JPG, PNG.</div>
+              <div className="text-sm text-gray-500">Maks 20MB. Tipe: PDF, DOC, JPG, PNG.</div>
             </div>
           </form>
         </section>

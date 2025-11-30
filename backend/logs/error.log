@@ -1304,3 +1304,17 @@
 [2025-11-30T04:54:03.179Z] 404 GET /api/api/dokumen/sotk - Endpoint tidak ditemukan: /api/api/dokumen/sotk
 [2025-11-30T04:57:33.649Z] 500 POST /api/dokumen/sotk/upload - File too large
 [2025-11-30T06:02:08.318Z] 404 GET /favicon.ico - Endpoint tidak ditemukan: /favicon.ico
+[2025-11-30T09:20:12.840Z] 404 GET /api/renstra - Endpoint tidak ditemukan: /api/renstra
+[2025-11-30T09:20:12.843Z] 404 GET /api/renstra - Endpoint tidak ditemukan: /api/renstra
+[2025-11-30T09:52:59.419Z] 404 GET /api/hirarki - Endpoint tidak ditemukan: /api/hirarki
+[2025-11-30T09:52:59.421Z] 404 GET /api/hirarki - Endpoint tidak ditemukan: /api/hirarki
+[2025-11-30T10:02:39.108Z] 404 GET /api/hirarki - Endpoint tidak ditemukan: /api/hirarki
+[2025-11-30T10:02:39.116Z] 404 GET /api/hirarki - Endpoint tidak ditemukan: /api/hirarki
+[2025-11-30T10:06:54.290Z] 404 GET /api/hirarki - Endpoint tidak ditemukan: /api/hirarki
+[2025-11-30T10:06:54.296Z] 404 GET /api/hirarki - Endpoint tidak ditemukan: /api/hirarki
+[2025-11-30T10:06:55.232Z] 404 GET /api/hirarki - Endpoint tidak ditemukan: /api/hirarki
+[2025-11-30T10:06:55.235Z] 404 GET /api/hirarki - Endpoint tidak ditemukan: /api/hirarki
+[2025-11-30T10:09:08.384Z] 404 GET /api/hirarki - Endpoint tidak ditemukan: /api/hirarki
+[2025-11-30T10:09:08.391Z] 404 GET /api/hirarki - Endpoint tidak ditemukan: /api/hirarki
+[2025-11-30T14:52:54.784Z] 404 GET /api/api/programs - Endpoint tidak ditemukan: /api/api/programs
+[2025-11-30T14:52:54.790Z] 404 GET /api/api/programs - Endpoint tidak ditemukan: /api/api/programs
