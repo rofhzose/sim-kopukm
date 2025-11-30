@@ -1287,3 +1287,20 @@
 [2025-11-25T08:59:39.531Z] 404 GET /.env - Endpoint tidak ditemukan: /.env
 [2025-11-25T11:06:05.049Z] 404 GET /favicon.ico - Endpoint tidak ditemukan: /favicon.ico
 [2025-11-25T11:10:23.186Z] 404 GET /favicon.ico - Endpoint tidak ditemukan: /favicon.ico
+[2025-11-30T04:51:36.370Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-30T04:51:36.374Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-30T04:51:36.377Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-30T04:51:36.380Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-30T04:51:36.383Z] 404 GET /api/koperasi-summary - Endpoint tidak ditemukan: /api/koperasi-summary
+[2025-11-30T04:51:36.386Z] 404 GET /api/koperasi-summary - Endpoint tidak ditemukan: /api/koperasi-summary
+[2025-11-30T04:51:36.388Z] 404 GET /api/koperasi-summary - Endpoint tidak ditemukan: /api/koperasi-summary
+[2025-11-30T04:51:36.391Z] 404 GET /api/koperasi-summary - Endpoint tidak ditemukan: /api/koperasi-summary
+[2025-11-30T04:51:38.293Z] 404 GET /api/api/dokumen/sotk - Endpoint tidak ditemukan: /api/api/dokumen/sotk
+[2025-11-30T04:51:38.295Z] 404 GET /api/api/dokumen/sotk - Endpoint tidak ditemukan: /api/api/dokumen/sotk
+[2025-11-30T04:52:07.919Z] 404 POST /api/api/dokumen/sotk/upload - Endpoint tidak ditemukan: /api/api/dokumen/sotk/upload
+[2025-11-30T04:52:29.245Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-30T04:52:29.249Z] 404 GET /api/dashboard/koperasi-summary - Endpoint tidak ditemukan: /api/dashboard/koperasi-summary
+[2025-11-30T04:54:03.176Z] 404 GET /api/api/dokumen/sotk - Endpoint tidak ditemukan: /api/api/dokumen/sotk
+[2025-11-30T04:54:03.179Z] 404 GET /api/api/dokumen/sotk - Endpoint tidak ditemukan: /api/api/dokumen/sotk
+[2025-11-30T04:57:33.649Z] 500 POST /api/dokumen/sotk/upload - File too large
+[2025-11-30T06:02:08.318Z] 404 GET /favicon.ico - Endpoint tidak ditemukan: /favicon.ico

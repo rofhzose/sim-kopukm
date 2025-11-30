@@ -1,3 +1,4 @@
+// backend/src/server.js
 import http from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
@@ -16,6 +17,7 @@ import authRoutes from "./routes/authRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import koperasiRoute from "./routes/koperasiRoutes.js";
 import umkmRoute from "./routes/umkmRoutes.js";
+import dokumenSotkRoutes from "./routes/dokumenSotk.js";
 
 dotenv.config();
 
@@ -27,7 +29,7 @@ const NODE_ENV = process.env.NODE_ENV || "production";
 // 🔹 Direktori log
 // ================================
 const logDir = path.join(process.cwd(), "logs");
-if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
+if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
 
 const accessLogStream = fs.createWriteStream(
   path.join(logDir, "access.log"),
@@ -35,10 +37,19 @@ const accessLogStream = fs.createWriteStream(
 );
 
 // ================================
+// 🔹 Direktori uploads (static files)
+// ================================
+const uploadsDir = path.join(process.cwd(), "uploads");
+const uploadsSotkDir = path.join(uploadsDir, "sotk");
+
+// ensure upload folders exist
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+if (!fs.existsSync(uploadsSotkDir)) fs.mkdirSync(uploadsSotkDir, { recursive: true });
+
+// ================================
 // 🔹 Allowed Origins (FIXED)
 // ================================
 const allowedOrigins = [
-
   "https://himavera.my.id",
   "http://himavera.my.id",
   "https://api.himavera.my.id",
@@ -50,13 +61,10 @@ const allowedOrigins = [
   "http://72.61.208.1:3001",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-  "http://localhost:3001",   // ✅ WAJIB TAMBAH
+  "http://localhost:3001",
   "http://127.0.0.1:3001",
   "http://127.0.0.1:4849",
-  
 ];
-
-
 
 // ================================
 // 🔥 CORS HARUS PALING ATAS!
@@ -64,7 +72,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // Postman, curl, dll
+      if (!origin) return callback(null, true); // Postman, curl, mobile apps, server-to-server
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -90,7 +98,8 @@ app.use(morgan("combined", { stream: accessLogStream }));
 app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: false, // CSRF inline css/script biarkan OFF untuk CSR frontend
+    contentSecurityPolicy: false, // disable for easier CSR + inline assets
+    frameguard: false,
   })
 );
 
@@ -122,6 +131,29 @@ app.use(
 })();
 
 // ================================
+// 🔹 Static: serve uploads (accessible at /uploads/*)
+// ================================
+// pastikan uploadsDir sudah didefinisikan sebelum ini
+// contoh: const uploadsDir = path.join(process.cwd(), "uploads");
+
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    // remove frame options so uploads can be embedded in iframes
+    try {
+      res.removeHeader("X-Frame-Options");
+      // optional: remove CSP if you added restrictive policy earlier
+      // res.removeHeader("Content-Security-Policy");
+    } catch (e) {
+      // ignore if not supported
+    }
+    next();
+  },
+  express.static(uploadsDir, { index: false })
+);
+
+
+// ================================
 // 🔹 Routing
 // ================================
 app.get("/", (req, res) => {
@@ -133,9 +165,10 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/dashboard", koperasiRoute);
 app.use("/api", koperasiRoute);
 app.use("/api", umkmRoute);
+app.use("/api/dokumen/sotk", dokumenSotkRoutes);
 
 // ================================
-// 🔹 Handler 404
+// 🔹 Handler 404 (after routes)
 // ================================
 app.use((req, res, next) => {
   const error = new Error(`Endpoint tidak ditemukan: ${req.originalUrl}`);
@@ -156,6 +189,11 @@ app.use((err, req, res, next) => {
   fs.appendFileSync(path.join(logDir, "error.log"), logEntry);
 
   console.error("❌ ERROR:", logEntry);
+
+  // If CORS blocked origin, express-cors callback returns an Error (message: Not allowed by CORS)
+  if (err.message && err.message.includes("Not allowed by CORS")) {
+    return res.status(403).json({ status: "error", code: 403, message: err.message });
+  }
 
   res.status(status).json({
     status: "error",
