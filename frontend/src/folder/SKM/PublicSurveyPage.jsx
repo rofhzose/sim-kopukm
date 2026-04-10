@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-  ArrowLeft, Building2, UserCircle, CheckCircle2, 
-  Frown, Meh, Smile, Laugh, Send, Star, ClipboardList
+  Building2, UserCircle, CheckCircle2, 
+  Frown, Meh, Smile, Laugh, Send, Star, ClipboardList, Store
 } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance";
 
@@ -11,7 +11,6 @@ const PublicSurveyPage = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // State untuk data form
   const [formData, setFormData] = useState({
     nama_layanan: "", 
     jenis_kelamin: "",
@@ -81,149 +80,171 @@ const PublicSurveyPage = () => {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-24 font-sans">
-      <div className="bg-slate-900 text-white pt-10 pb-16 px-6 rounded-b-[3rem] shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-        <div className="max-w-3xl mx-auto relative z-10">
-          <div className="flex items-center gap-3 text-sky-400 font-bold text-[10px] tracking-widest uppercase mb-3">
-            <div className="w-8 h-[2px] bg-sky-400"></div> Portal Survei Kepuasan
+      
+      {/* NAVBAR ATAS (DISPERINDAG KOPUKM) */}
+      <div className="bg-[#0f172a] text-white px-6 py-3 flex justify-between items-center w-full shadow-md z-50 relative">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-12 flex items-center justify-center bg-transparent">
+            <Store size={30} className="text-sky-400" /> 
           </div>
-          <h1 className="text-4xl font-black tracking-tight mb-2">Form <span className="text-sky-400">Penilaian</span> SKM</h1>
-          <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">Dinas Koperasi dan UKM Karawang</p>
+          <div className="flex flex-col">
+            <span className="font-bold text-[17px] leading-tight tracking-wide text-white">DISPERINDAG KOPUKM</span>
+            <span className="text-[9px] text-slate-300 tracking-widest uppercase">Dinas Perindustrian, Perdagangan, Koperasi dan UKM</span>
+          </div>
         </div>
+        {/* Blok Profil dihapus agar lebih clean untuk halaman publik */}
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 -mt-10 space-y-6">
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 flex items-center gap-5 shadow-xl transition-all">
-          <span className="text-3xl animate-bounce">{progressPercent === 100 ? '🎉' : '✍️'}</span>
-          <div className="flex-1">
-            <div className="flex justify-between items-end mb-2">
-              <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progres Pengisian</p>
-                <p className="text-lg font-black text-slate-800">{progressPercent}% <span className="text-xs text-slate-400 font-bold">Lengkap</span></p>
-              </div>
-              <p className="text-[10px] font-bold text-sky-600 bg-sky-50 px-3 py-1 rounded-full">{totalFilled} / {totalFields} Field</p>
+      <div className="max-w-[1100px] mx-auto px-6 w-full">
+        {/* SUB-HEADER / JUDUL */}
+        <div className="pt-10 pb-6 w-full">
+          <div className="mb-2">
+            <div className="flex items-center gap-2 text-sky-500 font-black text-[10px] tracking-widest uppercase mb-3">
+              <div className="w-5 h-[3px] bg-sky-500 rounded-full"></div> SURVEI KEPUASAN MASYARAKAT
             </div>
-            <div className="h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-50">
-              <div 
-                className="h-full bg-gradient-to-r from-sky-500 to-indigo-500 transition-all duration-700 ease-out" 
-                style={{ width: `${progressPercent}%` }}
-              ></div>
-            </div>
+            <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">
+              Tambah <span className="text-sky-500">Survey Baru</span>
+            </h1>
+            <p className="text-[13px] font-medium text-slate-400">
+              Pilih unit layanan yang akan disurvei, lalu lanjutkan untuk mengisi data responden.
+            </p>
           </div>
         </div>
 
-        <div className={`bg-white border-2 rounded-[2.5rem] shadow-sm overflow-hidden transition-all ${formData.nama_layanan ? 'border-emerald-500' : 'border-slate-200'}`}>
-          <div className="bg-slate-50/50 p-6 border-b border-slate-100 flex items-center gap-4">
-            <div className="w-10 h-10 bg-sky-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-sky-100">
-              <ClipboardList size={20} />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-800 uppercase text-sm tracking-tight">Jenis Layanan</h3>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Pilih layanan yang Anda terima</p>
-            </div>
-          </div>
-          <div className="p-8">
-            <select 
-              required
-              className={`w-full p-5 rounded-2xl border-2 transition-all outline-none text-base font-bold appearance-none cursor-pointer
-                ${formData.nama_layanan ? 'border-emerald-500 bg-emerald-50/30 text-emerald-900' : 'border-slate-100 bg-slate-50 text-slate-400 focus:border-sky-500'}`}
-              value={formData.nama_layanan}
-              onChange={(e) => setFormData({...formData, nama_layanan: e.target.value})}
-              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.5rem center', backgroundSize: '1.5rem' }}
-            >
-              <option value="">— Klik untuk memilih layanan —</option>
-              <option value="Pelayanan Koperasi">Pelayanan Kelembagaan Koperasi</option>
-              <option value="Pelayanan UMKM">Penerbitan IUMK / Pemberdayaan UMKM</option>
-              <option value="Pelayanan Umum">Pelayanan Administrasi Umum & Sekretariat</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden">
-          <div className="bg-slate-50/50 p-6 border-b border-slate-100 flex items-center gap-4">
-            <div className="w-10 h-10 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100">
-              <UserCircle size={20} />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-800 uppercase text-sm tracking-tight">Data Responden</h3>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Informasi demografis anda</p>
-            </div>
-          </div>
-          <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { label: 'Jenis Kelamin', name: 'jenis_kelamin', options: ['Laki-laki', 'Perempuan'] },
-              { label: 'Pendidikan', name: 'pendidikan', options: ['SD', 'SMP', 'SMA', 'Diploma', 'Sarjana', 'Magister', 'Doktoral'] },
-              { label: 'Pekerjaan', name: 'pekerjaan', options: ['Pegawai Negeri', 'Swasta', 'Wiraswasta', 'Pelajar', 'Mahasiswa', 'Tidak Bekerja'] },
-            ].map((field) => (
-              <div key={field.name}>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-1">{field.label}</label>
-                <select 
-                  className={`w-full p-4 rounded-2xl border-2 transition-all outline-none text-sm font-bold ${formData[field.name] ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100 bg-slate-50'}`}
-                  value={formData[field.name]}
-                  onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
-                >
-                  <option value="">Pilih</option>
-                  {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 p-5 bg-sky-600 text-white rounded-3xl shadow-xl shadow-sky-100">
-          <Star size={24} className="fill-current" />
-          <div>
-            <h3 className="font-black text-sm uppercase tracking-wider">Penilaian 9 Unsur Pelayanan</h3>
-            <p className="text-[10px] font-medium opacity-80 uppercase tracking-widest">Berikan nilai objektif anda</p>
-          </div>
-        </div>
-
-        {questions.map((q) => (
-          <div 
-            key={q.id} 
-            className={`bg-white border-2 rounded-[2.5rem] overflow-hidden transition-all duration-300 relative group
-              ${formData[q.id] > 0 ? 'border-emerald-200 shadow-xl' : 'border-slate-100'}`}
-          >
-            <div className="absolute left-0 top-0 bottom-0 w-2.5" style={{ backgroundColor: formData[q.id] > 0 ? '#10b981' : q.color }}></div>
-            
-            <div className={`p-8 flex flex-col sm:flex-row sm:items-center gap-5 ${formData[q.id] > 0 ? 'bg-emerald-50/30' : ''}`}>
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-mono font-black text-xs shadow-inner" style={{ backgroundColor: `${q.color}15`, color: q.color }}>
-                {q.id.toUpperCase()}
-              </div>
-              <div className="flex-1">
-                <h4 className="font-black text-slate-800 tracking-tight">{q.title}</h4>
-                <p className="text-xs text-slate-500 font-medium">{q.desc}</p>
-              </div>
-              {formData[q.id] > 0 && (
-                <div className="inline-flex self-start sm:self-auto items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-emerald-100 animate-in slide-in-from-right-4">
-                  <CheckCircle2 size={12} /> {formData[q.id]} — {ratingOptions.find(o => o.val === formData[q.id])?.label}
+        {/* KONTEN FORM */}
+        <div className="mt-8 space-y-6">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 flex items-center gap-5 shadow-sm transition-all">
+            <span className="text-3xl animate-bounce">{progressPercent === 100 ? '🎉' : '✍️'}</span>
+            <div className="flex-1">
+              <div className="flex justify-between items-end mb-2">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progres Pengisian</p>
+                  <p className="text-lg font-black text-slate-800">{progressPercent}% <span className="text-xs text-slate-400 font-bold">Lengkap</span></p>
                 </div>
-              )}
+                <p className="text-[10px] font-bold text-sky-600 bg-sky-50 px-3 py-1 rounded-full">{totalFilled} / {totalFields} Field</p>
+              </div>
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-50">
+                <div 
+                  className="h-full bg-gradient-to-r from-sky-500 to-indigo-500 transition-all duration-700 ease-out" 
+                  style={{ width: `${progressPercent}%` }}
+                ></div>
+              </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-4 border-t border-slate-50">
-              {ratingOptions.map((opt) => (
-                <button
-                  key={opt.val}
-                  type="button"
-                  onClick={() => setFormData({...formData, [q.id]: opt.val})}
-                  className={`flex flex-col items-center gap-3 py-6 transition-all relative overflow-hidden group
-                    ${formData[q.id] === opt.val ? `${opt.color} text-white shadow-inner` : `bg-white ${opt.text} hover:bg-slate-50`}
-                  `}
-                >
-                  <span className={`text-3xl transition-all duration-300 ${formData[q.id] === opt.val ? 'scale-125 rotate-6' : 'group-hover:scale-110'}`}>
-                    {opt.icon}
-                  </span>
-                  <span className="text-[10px] font-black uppercase tracking-widest">{opt.val}</span>
-                </button>
+          <div className={`bg-white border-2 rounded-[2.5rem] shadow-sm overflow-hidden transition-all ${formData.nama_layanan ? 'border-emerald-500' : 'border-slate-200'}`}>
+            <div className="bg-slate-50/50 p-6 border-b border-slate-100 flex items-center gap-4">
+              <div className="w-10 h-10 bg-sky-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-sky-100">
+                <ClipboardList size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 uppercase text-sm tracking-tight">Jenis Layanan</h3>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Pilih layanan yang Anda terima</p>
+              </div>
+            </div>
+            <div className="p-8">
+              <select 
+                required
+                className={`w-full p-5 rounded-2xl border-2 transition-all outline-none text-base font-bold appearance-none cursor-pointer
+                  ${formData.nama_layanan ? 'border-emerald-500 bg-emerald-50/30 text-emerald-900' : 'border-slate-100 bg-slate-50 text-slate-400 focus:border-sky-500'}`}
+                value={formData.nama_layanan}
+                onChange={(e) => setFormData({...formData, nama_layanan: e.target.value})}
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.5rem center', backgroundSize: '1.5rem' }}
+              >
+                <option value="">— Klik untuk memilih layanan —</option>
+                <option value="Pelayanan Koperasi">Pelayanan Kelembagaan Koperasi</option>
+                <option value="Pelayanan UMKM">Penerbitan IUMK / Pemberdayaan UMKM</option>
+                <option value="Pelayanan Umum">Pelayanan Administrasi Umum & Sekretariat</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden">
+            <div className="bg-slate-50/50 p-6 border-b border-slate-100 flex items-center gap-4">
+              <div className="w-10 h-10 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100">
+                <UserCircle size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 uppercase text-sm tracking-tight">Data Responden</h3>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Informasi demografis anda</p>
+              </div>
+            </div>
+            <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { label: 'Jenis Kelamin', name: 'jenis_kelamin', options: ['Laki-laki', 'Perempuan'] },
+                { label: 'Pendidikan', name: 'pendidikan', options: ['SD', 'SMP', 'SMA', 'Diploma', 'Sarjana', 'Magister', 'Doktoral'] },
+                { label: 'Pekerjaan', name: 'pekerjaan', options: ['Pegawai Negeri', 'Swasta', 'Wiraswasta', 'Pelajar', 'Mahasiswa', 'Tidak Bekerja'] },
+              ].map((field) => (
+                <div key={field.name}>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-1">{field.label}</label>
+                  <select 
+                    className={`w-full p-4 rounded-2xl border-2 transition-all outline-none text-sm font-bold ${formData[field.name] ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100 bg-slate-50'}`}
+                    value={formData[field.name]}
+                    onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+                  >
+                    <option value="">Pilih</option>
+                    {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
               ))}
             </div>
           </div>
-        ))}
+
+          <div className="flex items-center gap-3 p-5 bg-sky-600 text-white rounded-3xl shadow-xl shadow-sky-100">
+            <Star size={24} className="fill-current" />
+            <div>
+              <h3 className="font-black text-sm uppercase tracking-wider">Penilaian 9 Unsur Pelayanan</h3>
+              <p className="text-[10px] font-medium opacity-80 uppercase tracking-widest">Berikan nilai objektif anda</p>
+            </div>
+          </div>
+
+          {questions.map((q) => (
+            <div 
+              key={q.id} 
+              className={`bg-white border-2 rounded-[2.5rem] overflow-hidden transition-all duration-300 relative group
+                ${formData[q.id] > 0 ? 'border-emerald-200 shadow-sm' : 'border-slate-100'}`}
+            >
+              <div className="absolute left-0 top-0 bottom-0 w-2.5" style={{ backgroundColor: formData[q.id] > 0 ? '#10b981' : q.color }}></div>
+              
+              <div className={`p-8 flex flex-col sm:flex-row sm:items-center gap-5 ${formData[q.id] > 0 ? 'bg-emerald-50/30' : ''}`}>
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-mono font-black text-xs shadow-inner" style={{ backgroundColor: `${q.color}15`, color: q.color }}>
+                  {q.id.toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-black text-slate-800 tracking-tight">{q.title}</h4>
+                  <p className="text-xs text-slate-500 font-medium">{q.desc}</p>
+                </div>
+                {formData[q.id] > 0 && (
+                  <div className="inline-flex self-start sm:self-auto items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-emerald-100 animate-in slide-in-from-right-4">
+                    <CheckCircle2 size={12} /> {formData[q.id]} — {ratingOptions.find(o => o.val === formData[q.id])?.label}
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-4 border-t border-slate-50">
+                {ratingOptions.map((opt) => (
+                  <button
+                    key={opt.val}
+                    type="button"
+                    onClick={() => setFormData({...formData, [q.id]: opt.val})}
+                    className={`flex flex-col items-center gap-3 py-6 transition-all relative overflow-hidden group
+                      ${formData[q.id] === opt.val ? `${opt.color} text-white shadow-inner` : `bg-white ${opt.text} hover:bg-slate-50`}
+                    `}
+                  >
+                    <span className={`text-3xl transition-all duration-300 ${formData[q.id] === opt.val ? 'scale-125 rotate-6' : 'group-hover:scale-110'}`}>
+                      {opt.icon}
+                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">{opt.val}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200 p-5 z-50">
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-6">
+        <div className="max-w-[1100px] mx-auto flex items-center justify-between gap-6 px-6">
           <div className="hidden md:block">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ringkasan Pengisian</p>
             <p className="font-black text-slate-800 text-sm italic">{totalFilled} dari {totalFields} data telah diisi</p>
