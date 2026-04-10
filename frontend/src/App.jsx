@@ -42,6 +42,8 @@ import LkePage from "./folder/LKE/LkePage";
 import LppdPage from "./folder/LPPD/LppdPage";
 import PohonKinerjaPage from "./folder/POHONKINERJA/PohonKinerjaPage";
 import SkmPage from "./folder/SKM/SkmPage";
+// IMPORT HALAMAN SURVEY PUBLIK
+import PublicSurveyPage from "./folder/SKM/PublicSurveyPage"; 
 import PegawaiPage from "./folder/PEGAWAI/PegawaiPage";
 import JabatanPage from "./folder/JABATAN/JabatanPage";
 import CreateJabatanPage from "./folder/JABATAN/createJabatanPage";
@@ -65,6 +67,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
+        
+        {/* ROUTE PUBLIK (Tanpa Sidebar/Navbar Admin) */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/verifikasi-aset/:id" element={<VerificationPage />} />
         <Route path="/verifikasi-aset-e/:id" element={<VerificationPage />} />
@@ -74,8 +78,11 @@ function App() {
         <Route path="/buku-tamu/check-in" element={<BukuTamuCheckIn />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        
+        {/* ROUTE SURVEI PUBLIK - Taruh di sini agar bisa diakses masyarakat */}
+        <Route path="/survei-layanan" element={<PublicSurveyPage />} />
 
-        {/* routes with footer */}
+        {/* ROUTES PRIVATE / ADMIN (Dengan Footer & Sidebar/Navbar) */}
         <Route element={<MainLayout />}>
           <Route path="/overview" element={<OverviewDashboard />} />
           <Route path="/dashboard" element={<DashboardPage />} />
