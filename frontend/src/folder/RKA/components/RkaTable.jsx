@@ -1,4 +1,3 @@
-// src/components/RkaTable.jsx
 import React, { useMemo } from "react";
 import axiosInstance from "@/utils/axiosInstance";
 
@@ -8,6 +7,17 @@ function fmtIdr(v) {
     currency: "IDR",
     maximumFractionDigits: 0,
   }).format(Number(v || 0));
+}
+function formatTW(twM, mgM, twS, mgS) {
+  if (!twM || !twS || !mgM || !mgS) return "Belum Diatur";
+  
+  // Jika mulai dan selesai di Triwulan dan Minggu yang persis sama
+  if (twM === twS && mgM === mgS) {
+    return `TW ${twM} (Mg ${mgM})`;
+  }
+  
+  // Jika lintas Minggu atau lintas Triwulan
+  return `TW ${twM} (Mg ${mgM}) - TW ${twS} (Mg ${mgS})`;
 }
 
 export default function RkaTable({ data = [], onEdit = () => {}, onDeleteSuccess = () => {} }) {
@@ -19,33 +29,56 @@ export default function RkaTable({ data = [], onEdit = () => {}, onDeleteSuccess
 
       if (!programs[pId]) {
         programs[pId] = { 
-          id: pId, code: item.program_code || "8.01.01", name: item.program_name, 
+          id: pId, code: item.prog_kode || item.program_code || "8.01.01", name: item.program_name, 
           renstra: 0, murni: 0, p1: 0, p2: 0, efs: 0, ubah: 0, real: 0, 
           kegiatans: {} 
         };
       }
       if (!programs[pId].kegiatans[kId]) {
         programs[pId].kegiatans[kId] = { 
-          id: kId, code: item.kegiatan_code || "8.01.01.2.01", name: item.kegiatan_name, 
+          id: kId, code: item.keg_kode || item.kegiatan_code || "8.01.01.2.01", name: item.kegiatan_name, 
           renstra: 0, murni: 0, p1: 0, p2: 0, efs: 0, ubah: 0, real: 0, 
           subKegiatans: [] 
         };
       }
-      programs[pId].kegiatans[kId].subKegiatans.push(item);
 
-      const vals = ["renstra_val", "murni", "pergeseran_i", "pergeseran_ii", "efisiensi", "perubahan", "realisasi"];
-      vals.forEach(val => {
-        const num = Number(item[val] || 0);
-        const key = val === "renstra_val" ? "renstra" : val;
-        programs[pId].kegiatans[kId][key] = (programs[pId].kegiatans[kId][key] || 0) + num;
-        programs[pId][key] = (programs[pId][key] || 0) + num;
+      // Pastikan konversi ke Number agar bisa dijumlahkan
+      const murni = Number(item.murni || 0);
+      const p1 = Number(item.pergeseran_i || 0);
+      const p2 = Number(item.pergeseran_ii || 0);
+      const efs = Number(item.efisiensi || 0);
+      const ubah = Number(item.perubahan || 0);
+      const real = Number(item.realisasi || 0);
+      const renstra = Number(item.renstra_val || 0);
+
+      programs[pId].kegiatans[kId].subKegiatans.push({
+        ...item,
+        subkegiatan_code: item.sub_kode || item.subkegiatan_code || "8.01.01.2.01.0001"
       });
+
+      // Akumulasi
+      programs[pId].kegiatans[kId].renstra += renstra;
+      programs[pId].kegiatans[kId].murni += murni;
+      programs[pId].kegiatans[kId].p1 += p1;
+      programs[pId].kegiatans[kId].p2 += p2;
+      programs[pId].kegiatans[kId].efs += efs;
+      programs[pId].kegiatans[kId].ubah += ubah;
+      programs[pId].kegiatans[kId].real += real;
+
+      programs[pId].renstra += renstra;
+      programs[pId].murni += murni;
+      programs[pId].p1 += p1;
+      programs[pId].p2 += p2;
+      programs[pId].efs += efs;
+      programs[pId].ubah += ubah;
+      programs[pId].real += real;
     });
-    return Object.values(programs);
+
+    return Object.values(programs).sort((a, b) => a.code.localeCompare(b.code));
   }, [data]);
 
   const handleDelete = async (id) => {
-    if (!confirm("Hapus sub kegiatan ini?")) return;
+    if (!confirm("Hapus seluruh sub kegiatan ini beserta semua rincian belanjanya?")) return;
     try {
       await axiosInstance.delete(`/rka/${id}`);
       onDeleteSuccess();
@@ -55,7 +88,24 @@ export default function RkaTable({ data = [], onEdit = () => {}, onDeleteSuccess
   };
 
   const thStyle = "px-2 py-3 text-[10px] font-black text-white uppercase tracking-tighter bg-[#1e293b] border-r border-slate-700 sticky top-0 z-30";
-  const moneyStyle = "font-mono text-right text-[10px] px-2 whitespace-nowrap align-middle";
+  const moneyStyle = "font-mono text-right text-[10px] px-2 py-2.5 whitespace-nowrap align-middle";
+
+  // Komponen khusus untuk Cell Pagu yang bisa diklik untuk edit
+  const renderEditablePagu = (val, paguId, sub, extraClass = "") => (
+    <td 
+      className={`${moneyStyle} border-b border-slate-100 group/cell relative cursor-pointer hover:bg-amber-50 transition-colors ${extraClass}`}
+      onClick={() => onEdit(sub, paguId)}
+      title="Klik untuk Edit Pagu Ini"
+    >
+      <div className="flex justify-end items-center gap-2">
+        {/* Ikon Pensil akan muncul saat hover pada nominal */}
+        <button className="opacity-0 group-hover/cell:opacity-100 p-0.5 bg-amber-200 text-amber-800 rounded transition-opacity shadow-sm">
+          <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        </button>
+        <span className={val > 0 ? "font-bold text-slate-700" : ""}>{fmtIdr(val)}</span>
+      </div>
+    </td>
+  );
 
   return (
     <div className="w-full bg-white rounded-xl shadow-2xl overflow-hidden border border-slate-200">
@@ -120,67 +170,45 @@ export default function RkaTable({ data = [], onEdit = () => {}, onDeleteSuccess
                       <td colSpan={4} className="border-b border-slate-200 bg-slate-100"></td>
                     </tr>
 
-                    {/* --- LEVEL 3: SUB KEGIATAN (DETAIL AS PER IMAGE) --- */}
                     {/* --- LEVEL 3: SUB KEGIATAN --- */}
-{keg.subKegiatans.map((sub) => (
-  <tr key={`sub-${sub.id_rka}`} className="hover:bg-blue-50/30 transition-colors group">
-    <td className="border-b border-slate-100"></td>
-    <td className="p-2 pl-8 border-b border-slate-100">
-      <div className="text-[9px] text-purple-600 font-mono font-bold">{sub.subkegiatan_code}</div>
-      <div className="text-slate-600 font-medium leading-tight">{sub.subkegiatan_name}</div>
-    </td>
+                    {keg.subKegiatans.map((sub) => (
+                      <tr key={`sub-${sub.id}`} className="hover:bg-blue-50/30 transition-colors group">
+                        <td className="border-b border-slate-100"></td>
+                        <td className="p-2 pl-8 border-b border-slate-100">
+                          <div className="text-[9px] text-purple-600 font-mono font-bold">{sub.subkegiatan_code}</div>
+                          <div className="text-slate-800 font-bold leading-tight uppercase">{sub.subkegiatan_name}</div>
+                        </td>
 
-    {/* --- LEVEL 3: SUB KEGIATAN --- */}
-<td className="p-2 border-b border-slate-100">
-  {/* Judul Uraian Utama */}
-  <div className="font-black text-slate-700 uppercase text-[10px] mb-1.5 leading-tight">
-    {sub.uraian || sub.subkegiatan_name}
-  </div>
+                        <td className="p-2 border-b border-slate-100">
+                          <div className="font-black text-slate-700 uppercase text-[10px] mb-1.5 leading-tight">
+                            {sub.uraian || sub.subkegiatan_name}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[9px] font-bold border border-blue-100">
+                              <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+                              {sub.pj_nama || "N/A"}
+                            </span> 
+                            <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-[9px] font-bold border border-amber-100 shadow-sm">
+                              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                              {formatTW(sub.tw_mulai, sub.mg_mulai, sub.tw_selesai, sub.mg_selesai)}
+                            </span>
+                            <span className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 text-emerald-700 rounded-md text-[9px] font-black border border-emerald-200 shadow-sm transition-all hover:bg-emerald-100">
+                              <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                              <span className="tracking-tight">
+                                TARGET: <span className="text-emerald-900">{sub.target_angka || "0"}</span> {sub.target_satuan || "SATUAN"}
+                              </span>
+                            </span>
+                          </div>
+                        </td>
 
-  {/* Baris Badge Keterangan */}
-  <div className="flex flex-wrap gap-1.5">
-    {/* BADGE PJ */}
-    <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[9px] font-bold border border-blue-100">
-      <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
-      {sub.pj_nama || "N/A"}
-    </span>
+                        {/* Masing-masing kolom pagu yang bisa diklik untuk di-edit khusus Pagu Tersebut */}
+                        <td className={`${moneyStyle} border-b border-slate-100 text-slate-400`}>{fmtIdr(sub.renstra_val || sub.renstra)}</td>
+                        {renderEditablePagu(sub.murni, "1", sub, "text-slate-600")}
+                        {renderEditablePagu(sub.pergeseran_i, "2", sub, "text-slate-500")}
+                        {renderEditablePagu(sub.pergeseran_ii, "3", sub, "text-slate-500")}
+                        {renderEditablePagu(sub.efisiensi, "4", sub, "text-slate-500")}
+                        {renderEditablePagu(sub.perubahan, "5", sub, "bg-blue-50/50")}
 
-    {/* BADGE TRIWULAN */}
-    <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-[9px] font-bold border border-amber-100">
-      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      TW {sub.triwulan || "-"}
-    </span>
-
-    {/* BADGE TARGET & SATUAN (UPDATE TERBARU) */}
-    <span className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 text-emerald-700 rounded-md text-[9px] font-black border border-emerald-200 shadow-sm transition-all hover:bg-emerald-100">
-  {/* Icon Check-Circle untuk melambangkan Target Output */}
-  <svg 
-    className="w-3 h-3 text-emerald-600" 
-    fill="none" 
-    stroke="currentColor" 
-    viewBox="0 0 24 24" 
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      strokeWidth="3" 
-      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-  
-  <span className="tracking-tight">
-    TARGET: <span className="text-emerald-900">{sub.target_angka || "0"}</span> {sub.target_satuan || "SATUAN"}
-  </span>
-</span>
-  </div>
-</td>
-                        <td className={`${moneyStyle} border-b border-slate-100 text-slate-400`}>{fmtIdr(sub.renstra_val)}</td>
-                        <td className={`${moneyStyle} border-b border-slate-100 font-bold text-slate-600`}>{fmtIdr(sub.murni)}</td>
-                        <td className={`${moneyStyle} border-b border-slate-100 text-slate-400`}>{fmtIdr(sub.pergeseran_i)}</td>
-                        <td className={`${moneyStyle} border-b border-slate-100 text-slate-400`}>{fmtIdr(sub.pergeseran_ii)}</td>
-                        <td className={`${moneyStyle} border-b border-slate-100 text-slate-400`}>{fmtIdr(sub.efisiensi)}</td>
-                        <td className={`${moneyStyle} border-b border-slate-100 font-black text-blue-700 bg-blue-50/50`}>{fmtIdr(sub.perubahan)}</td>
                         <td className={`${moneyStyle} border-b border-slate-100 font-black text-emerald-700 bg-emerald-50/50`}>{fmtIdr(sub.realisasi)}</td>
                         
                         <td className="p-2 text-center border-b border-slate-100">
@@ -198,8 +226,9 @@ export default function RkaTable({ data = [], onEdit = () => {}, onDeleteSuccess
                         </td>
                         <td className="p-2 sticky right-0 bg-white group-hover:bg-blue-50/90 border-b border-slate-100 shadow-[-5px_0_10px_rgba(0,0,0,0.05)]">
                           <div className="flex flex-col gap-1 items-center">
-                            <button onClick={() => onEdit(sub)} className="w-full py-1 bg-amber-400 text-white rounded-[3px] text-[8px] font-black uppercase shadow-sm">Edit</button>
-                            <button onClick={() => handleDelete(sub.id)} className="w-full py-1 bg-red-500 text-white rounded-[3px] text-[8px] font-black uppercase shadow-sm">Del</button>
+                            {/* Tombol Edit Utama di Kolom Aksi kita set default ke Pagu 1 (Murni) */}
+                            <button onClick={() => onEdit(sub, "1")} className="w-full py-1 bg-amber-400 hover:bg-amber-500 text-white rounded-[3px] text-[8px] font-black uppercase shadow-sm">Edit</button>
+                            <button onClick={() => handleDelete(sub.id)} className="w-full py-1 bg-red-500 hover:bg-red-600 text-white rounded-[3px] text-[8px] font-black uppercase shadow-sm">Del</button>
                           </div>
                         </td>
                       </tr>

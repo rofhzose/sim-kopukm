@@ -106,6 +106,7 @@ export default function NavUser() {
 
         <DropdownItem
           key="profile"
+          onPress={() => navigate("/profile")}
           textValue="Profile"
           startContent={<ProfileIcon />}
           classNames={{

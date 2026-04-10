@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Save, Loader2, ClipboardList } from "lucide-react";
 import axiosInstance from "@/utils/axiosInstance";
 import Swal from "sweetalert2";
@@ -13,20 +14,33 @@ export default function AddKegiatanModal({ open, onClose, onSuccess, programId, 
     keterangan: "",
   });
 
+  useEffect(() => {
+    if (!open) {
+      setFormData({
+        kodering: "",
+        nama_kegiatan: "",
+        output_kegiatan: "",
+        indikator_kegiatan: "",
+        keterangan: "",
+      });
+    }
+  }, [open]);
+
   if (!open) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Kita tambahkan program_id ke payload
       const payload = { ...formData, program_id: programId };
       await axiosInstance.post("/renstra/kegiatan", payload);
       
       Swal.fire("Berhasil!", "Kegiatan baru telah ditambahkan.", "success");
-      onSuccess(); // Refresh data di tabel
-      onClose();   // Tutup modal
-      setFormData({ kodering: "", nama_kegiatan: "", output_kegiatan: "", indikator_kegiatan: "", keterangan: "" });
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+      onClose();
     } catch (err) {
       Swal.fire("Gagal!", err.response?.data?.message || "Terjadi kesalahan", "error");
     } finally {
@@ -34,12 +48,12 @@ export default function AddKegiatanModal({ open, onClose, onSuccess, programId, 
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
         
         {/* HEADER */}
-        <div className="bg-slate-900 p-8 text-white flex justify-between items-center">
+        <div className="bg-slate-900 p-6 text-white flex justify-between items-center border-b border-slate-800">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-amber-500 rounded-2xl shadow-lg shadow-amber-500/20">
               <ClipboardList size={24} />
@@ -55,10 +69,10 @@ export default function AddKegiatanModal({ open, onClose, onSuccess, programId, 
         </div>
 
         {/* FORM */}
-        <form onSubmit={handleSubmit} className="p-8 space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Kodering Kegiatan</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Kodering Kegiatan</label>
               <input
                 required
                 className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-amber-500 outline-none transition-all font-bold"
@@ -68,7 +82,7 @@ export default function AddKegiatanModal({ open, onClose, onSuccess, programId, 
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Nama Kegiatan</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Nama Kegiatan</label>
               <input
                 required
                 className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-amber-500 outline-none transition-all font-bold"
@@ -80,7 +94,7 @@ export default function AddKegiatanModal({ open, onClose, onSuccess, programId, 
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Output Kegiatan</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Output Kegiatan</label>
             <input
               required
               className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-amber-500 outline-none transition-all font-bold"
@@ -91,20 +105,18 @@ export default function AddKegiatanModal({ open, onClose, onSuccess, programId, 
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Indikator Kegiatan</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Indikator Kegiatan</label>
             <textarea
               required
-              className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-amber-500 outline-none transition-all font-bold min-h-[80px]"
+              className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-amber-500 outline-none transition-all font-bold min-h-[100px]"
               placeholder="Sebutkan indikator..."
               value={formData.indikator_kegiatan}
               onChange={(e) => setFormData({ ...formData, indikator_kegiatan: e.target.value })}
             />
           </div>
 
-          
-
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Keterangan</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase ml-1">Keterangan</label>
             <input
               className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-amber-500 outline-none transition-all font-bold"
               placeholder="Catatan tambahan (Opsional)..."
@@ -113,7 +125,7 @@ export default function AddKegiatanModal({ open, onClose, onSuccess, programId, 
             />
           </div>
 
-          <div className="pt-4 flex gap-3">
+          <div className="pt-6 flex gap-4">
             <button
               type="button"
               onClick={onClose}
@@ -132,6 +144,7 @@ export default function AddKegiatanModal({ open, onClose, onSuccess, programId, 
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

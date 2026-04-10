@@ -5,12 +5,10 @@ import pool from "../config/db.js";
  */
 export const getAllJabatan = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM jabatan ORDER BY level ASC, nama_jabatan ASC");
-    res.json({ 
-      success: true, 
-      count: rows.length, 
-      data: rows 
-    });
+    const [rows] = await pool.query(
+      "SELECT * FROM jabatan ORDER BY kelas_jabatan ASC, nama_jabatan ASC"
+    );
+    res.json({ success: true, count: rows.length, data: rows });
   } catch (error) {
     console.error("Get Jabatan Error:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -23,7 +21,9 @@ export const getAllJabatan = async (req, res) => {
 export const getJabatanById = async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.query("SELECT * FROM jabatan WHERE id_jabatan = ?", [id]);
+    const [rows] = await pool.query(
+      "SELECT * FROM jabatan WHERE id_jabatan = ?", [id]
+    );
 
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: "Jabatan tidak ditemukan" });
@@ -41,34 +41,30 @@ export const getJabatanById = async (req, res) => {
  */
 export const createJabatan = async (req, res) => {
   try {
-    const { nama_jabatan, level } = req.body;
+    const { nama_jabatan, keterangan, kelas_jabatan } = req.body;
 
     if (!nama_jabatan) {
       return res.status(400).json({ success: false, message: "Nama jabatan wajib diisi" });
     }
 
-    if (!level) {
-      return res.status(400).json({ success: false, message: "Level jabatan wajib dipilih" });
-    }
-
-    // Cek apakah nama jabatan sudah ada (opsional, untuk menghindari duplikat)
+    // Cek duplikat nama jabatan + kelas
     const [existing] = await pool.query(
-      "SELECT * FROM jabatan WHERE nama_jabatan = ? AND level = ?", 
-      [nama_jabatan, level]
+      "SELECT * FROM jabatan WHERE nama_jabatan = ? AND (kelas_jabatan = ? OR (kelas_jabatan IS NULL AND ? IS NULL))",
+      [nama_jabatan, kelas_jabatan || null, kelas_jabatan || null]
     );
     if (existing.length > 0) {
-      return res.status(400).json({ success: false, message: "Nama jabatan dengan level tersebut sudah terdaftar" });
+      return res.status(400).json({ success: false, message: "Jabatan dengan nama dan kelas tersebut sudah terdaftar" });
     }
 
     const [result] = await pool.query(
-      "INSERT INTO jabatan (nama_jabatan, level) VALUES (?, ?)",
-      [nama_jabatan, level]
+      "INSERT INTO jabatan (nama_jabatan, keterangan, kelas_jabatan) VALUES (?, ?, ?)",
+      [nama_jabatan, keterangan || null, kelas_jabatan || null]
     );
 
     res.status(201).json({
       success: true,
       message: "Jabatan berhasil ditambahkan",
-      data: { id: result.insertId, nama_jabatan, level }
+      data: { id: result.insertId, nama_jabatan, keterangan, kelas_jabatan }
     });
   } catch (error) {
     console.error("Create Jabatan Error:", error);
@@ -82,19 +78,15 @@ export const createJabatan = async (req, res) => {
 export const updateJabatan = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nama_jabatan, level } = req.body;
+    const { nama_jabatan, keterangan, kelas_jabatan } = req.body;
 
     if (!nama_jabatan) {
       return res.status(400).json({ success: false, message: "Nama jabatan wajib diisi" });
     }
 
-    if (!level) {
-      return res.status(400).json({ success: false, message: "Level jabatan wajib dipilih" });
-    }
-
     const [result] = await pool.query(
-      "UPDATE jabatan SET nama_jabatan = ?, level = ? WHERE id_jabatan = ?",
-      [nama_jabatan, level, id]
+      "UPDATE jabatan SET nama_jabatan = ?, keterangan = ?, kelas_jabatan = ? WHERE id_jabatan = ?",
+      [nama_jabatan, keterangan || null, kelas_jabatan || null, id]
     );
 
     if (result.affectedRows === 0) {
@@ -115,9 +107,9 @@ export const deleteJabatan = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Catatan: Jika jabatan ini sedang dipakai di tabel pegawai, 
-    // pastikan handle constraint error (RESTRICT) di database.
-    const [result] = await pool.query("DELETE FROM jabatan WHERE id_jabatan = ?", [id]);
+    const [result] = await pool.query(
+      "DELETE FROM jabatan WHERE id_jabatan = ?", [id]
+    );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: "Jabatan tidak ditemukan" });
@@ -126,15 +118,14 @@ export const deleteJabatan = async (req, res) => {
     res.json({ success: true, message: "Jabatan berhasil dihapus" });
   } catch (error) {
     console.error("Delete Jabatan Error:", error);
-    
-    // Memberi pesan lebih spesifik jika data masih digunakan oleh tabel lain
-    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-        return res.status(400).json({ 
-            success: false, 
-            message: "Gagal menghapus: Jabatan masih digunakan oleh data pegawai." 
-        });
+
+    if (error.code === "ER_ROW_IS_REFERENCED_2") {
+      return res.status(400).json({
+        success: false,
+        message: "Gagal menghapus: Jabatan masih digunakan oleh data pegawai.",
+      });
     }
-    
+
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

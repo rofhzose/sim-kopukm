@@ -38,6 +38,14 @@ import dokumenLkeRoutes from "./routes/dokumenLke.js";
 import dokumenDpaRoutes from "./routes/dokumenDpa.js";
 import dokumenKakRoutes from "./routes/dokumenKak.js";
 import masterRoutes from "./routes/masterRoutes.js";
+import userProfileRoutes from "./routes/userProfile.js";
+import { verifyToken } from "./middleware/authMiddleware.js";
+import statusPegawaiRoute from "./routes/statusPegawaiRoute.js";
+// tambahkan import ini
+import userRoutes from "./routes/userRoutes.js";
+import rencanaAksiRoutes from "./routes/rencanaaksiRoutes.js";
+import pohonKinerjaRoutes from "./routes/pohonKinerjaRoutes.js";
+import bukuTamuRoutes from "./routes/bukuTamuRoutes.js";
 
 //RENSTRA
 import ProgramRoutes from "./routes/Renstra/ProgramRoutes.js";
@@ -49,6 +57,8 @@ import SubKegiatanRoutes from "./routes/Renstra/SubKegiatanRoutes.js";
 import SubKegiatanAnggaranRoutes from "./routes/Renstra/SubKegiatanAnggaranRoutes.js";
 import DokumenRenstraRoutes from "./routes/Renstra/DokumenRoutes.js";
 import DashboardRenstraRoutes from "./routes/Renstra/DashboardRoutes.js";
+import KibBRoutes from "./routes/kibBRoutes.js";
+import kibERoutes from "./routes/kibERoutes.js";
 
 dotenv.config();
 
@@ -92,6 +102,20 @@ const allowedOrigins = [
   "http://localhost:3001",
   "http://127.0.0.1:3001",
   "http://127.0.0.1:4849",
+  "http://192.168.1.9:3002",
+  "http://72.61.208.1:3002",
+  "http://192.168.1.9:4849",
+  "http://192.168.1.6:3002",
+  "http://192.168.1.6:4849",
+  "http://localhost:3002",
+  "http://localhost:3002",
+
+
+  // ✅ Tambahkan ini:
+  "http://192.168.1.5:3001",
+  "http://192.168.1.5:3002",
+  "http://192.168.1.8:3001",
+  "http://192.168.1.8:4849",
 ];
 
 // ================================
@@ -217,6 +241,12 @@ app.use("/api/dokumen/lke", dokumenLkeRoutes);
 app.use("/api/dokumen/dpa", dokumenDpaRoutes);
 app.use("/api/dokumen/kak", dokumenKakRoutes);
 app.use("/api/master", masterRoutes);
+app.use("/api/user", verifyToken, userProfileRoutes); // PUT /profile
+app.use("/api/user", verifyToken, userRoutes);        // GET /, GET /:id, POST /, PUT /:id, DELETE /:id
+app.use("/api/rencana-aksi", rencanaAksiRoutes);
+app.use("/api/pohon-kinerja", pohonKinerjaRoutes);
+app.use("/api/status-pegawai", statusPegawaiRoute);
+app.use("/api/buku-tamu", bukuTamuRoutes);
 
 //RENSTRA
 app.use("/api/renstra/program", ProgramRoutes);
@@ -228,6 +258,8 @@ app.use("/api/renstra/sub-kegiatan-anggaran", SubKegiatanAnggaranRoutes);
 app.use("/api/renstra/tahun", TahunRoutes);
 app.use("/api/renstra/dokumen", DokumenRenstraRoutes);
 app.use("/api/renstra/dashboard", DashboardRenstraRoutes);
+app.use("/api/kib-b", KibBRoutes);
+app.use("/api/kib-e", kibERoutes);
 
 // ================================
 // 🔹 Handler 404 (after routes)
@@ -283,7 +315,7 @@ io.on("connection", (socket) => {
 // ================================
 // 🔹 Jalankan server
 // ================================
-const HOST = NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1";
+const HOST = "0.0.0.0";
 
 server.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on http://${HOST}:${PORT}`);

@@ -1,19 +1,7 @@
 import express from "express";
-import {
-  registerUser,
-  loginUser,
-  getAllUsers,
-  updateUserRole,
-  deleteUser,
-  updateUser,
-  getCurrentUser,
-} from "../controllers/authController.js";
+import { registerUser, loginUser, getAllUsers, updateUserRole, deleteUser, updateUser, getCurrentUser } from "../controllers/authController.js";
 
-import {
-  verifyToken,
-  isAdmin,
-  isSuperAdmin,
-} from "../middleware/authMiddleware.js";
+import { verifyToken, isAdmin, isSuperAdmin } from "../middleware/authMiddleware.js";
 
 import { handleAvatarUpload } from "../middleware/uploadMiddleware.js";
 
@@ -33,6 +21,13 @@ router.get("/users", verifyToken, isAdmin, getAllUsers);
 router.put("/users/:id/role", verifyToken, isSuperAdmin, updateUserRole);
 router.put("/users/:id", verifyToken, updateUser);
 router.delete("/users/:id", verifyToken, isSuperAdmin, deleteUser);
+// di routes/userProfile.js atau authRoutes.js
+router.get("/check-username", verifyToken, async (req, res) => {
+  const { username } = req.query;
+  if (!username?.trim()) return res.json({ available: false });
+  const [rows] = await pool.query("SELECT id FROM users WHERE username = ? AND id != ?", [username.trim(), req.user.id]);
+  res.json({ available: rows.length === 0 });
+});
 
 /**
  * 🧑‍💼 Role-based access demo

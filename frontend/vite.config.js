@@ -22,6 +22,7 @@ export default defineConfig({
     open: false,
     allowedHosts: [
       "72.61.208.1",
+      "192.168.1.6",
     ],
   },
 });

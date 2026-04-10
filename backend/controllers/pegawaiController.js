@@ -10,22 +10,33 @@ export const getPegawai = async (req, res, next) => {
     let query = `
       SELECT 
         p.id_pegawai,
+        p.id_user,
         p.nama_lengkap,
         p.nip,
+        p.tempat_lahir,
+        p.tanggal_lahir,
+        p.golongan_ruang,
+        p.pendidikan_formal,
+        p.nama_sekolah,
+        p.jurusan,
+        p.tahun_lulus,
         p.jabatan_definitif,
+        p.jabatan_tambahan,
         j.nama_jabatan,
         p.level,
+        p.status_pegawai,
+        p.kelas_pegawai,
         ph.id_atasan
       FROM pegawai p
       LEFT JOIN jabatan j 
         ON p.jabatan_definitif = j.id_jabatan
       LEFT JOIN pegawai_hirarki ph 
         ON p.id_pegawai = ph.id_pegawai
+        AND (ph.valid_sampai IS NULL OR ph.valid_sampai >= CURDATE())
     `;
 
     const params = [];
 
-    // Kalau ada ID → tambah WHERE
     if (id) {
       query += " WHERE p.id_pegawai = ?";
       params.push(id);
@@ -35,7 +46,6 @@ export const getPegawai = async (req, res, next) => {
 
     const [rows] = await pool.query(query, params);
 
-    // Kalau mode get by id
     if (id) {
       if (rows.length === 0) {
         return res.status(404).json({
@@ -43,18 +53,10 @@ export const getPegawai = async (req, res, next) => {
           message: "Pegawai tidak ditemukan",
         });
       }
-
-      return res.json({
-        success: true,
-        data: rows[0],
-      });
+      return res.json({ success: true, data: rows[0] });
     }
 
-    // Mode get all
-    return res.json({
-      success: true,
-      data: rows,
-    });
+    return res.json({ success: true, data: rows });
   } catch (err) {
     console.error("pegawai:get", err);
     return next(err);
@@ -62,33 +64,44 @@ export const getPegawai = async (req, res, next) => {
 };
 
 /**
- * ➕ Create new pegawai (dengan id_jabatan dan id_atasan)
+ * ➕ Create new pegawai
  */
 export const createPegawai = async (req, res, next) => {
-  const { nama_lengkap, nip, level, id_jabatan, id_atasan } = req.body;
+  const { nama_lengkap, nip, level, id_jabatan, id_atasan, tempat_lahir, tanggal_lahir, golongan_ruang, pendidikan_formal, nama_sekolah, jurusan, tahun_lulus, status_pegawai, kelas_pegawai, id_user } = req.body;
 
   const connection = await pool.getConnection();
 
   try {
     await connection.beginTransaction();
 
-    // 1️⃣ Insert ke tabel pegawai
     const [result] = await connection.query(
       `INSERT INTO pegawai 
-       (nama_lengkap, nip, jabatan_definitif, level) 
-       VALUES (?, ?, ?, ?)`,
-      [nama_lengkap, nip, id_jabatan || null, level || 0]
+       (id_user, nama_lengkap, nip, tempat_lahir, tanggal_lahir, golongan_ruang,
+        pendidikan_formal, nama_sekolah, jurusan, tahun_lulus,
+        jabatan_definitif, level, status_pegawai, kelas_pegawai) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id_user || null,
+        nama_lengkap,
+        nip || null,
+        tempat_lahir || null,
+        tanggal_lahir || null,
+        golongan_ruang || null,
+        pendidikan_formal || null,
+        nama_sekolah || null,
+        jurusan || null,
+        tahun_lulus || null,
+        id_jabatan || null,
+        level || 0,
+        status_pegawai || null,
+        kelas_pegawai || null,
+      ],
     );
 
     const pegawaiId = result.insertId;
 
-    // 2️⃣ Insert ke tabel pegawai_hirarki jika ada id_atasan
     if (id_atasan && id_atasan !== "0") {
-      await connection.query(
-        `INSERT INTO pegawai_hirarki (id_pegawai, id_atasan) 
-         VALUES (?, ?)`,
-        [pegawaiId, id_atasan]
-      );
+      await connection.query(`INSERT INTO pegawai_hirarki (id_pegawai, id_atasan) VALUES (?, ?)`, [pegawaiId, id_atasan]);
     }
 
     await connection.commit();
@@ -108,66 +121,61 @@ export const createPegawai = async (req, res, next) => {
 };
 
 /**
- * ✏️ Update pegawai (dengan id_jabatan dan id_atasan)
+ * ✏️ Update pegawai
  */
 export const updatePegawai = async (req, res, next) => {
   const { id } = req.params;
-  const { nama_lengkap, nip, level, id_jabatan, id_atasan } = req.body;
+  const { nama_lengkap, nip, level, id_jabatan, id_atasan, tempat_lahir, tanggal_lahir, golongan_ruang, pendidikan_formal, nama_sekolah, jurusan, tahun_lulus, status_pegawai, kelas_pegawai, id_user } = req.body;
 
   const connection = await pool.getConnection();
 
   try {
     await connection.beginTransaction();
 
-    // 1️⃣ Update tabel pegawai
     const [result] = await connection.query(
       `UPDATE pegawai 
-       SET nama_lengkap = ?, nip = ?, jabatan_definitif = ?, level = ?
+       SET id_user = ?, nama_lengkap = ?, nip = ?, tempat_lahir = ?, tanggal_lahir = ?,
+           golongan_ruang = ?, pendidikan_formal = ?, nama_sekolah = ?, jurusan = ?,
+           tahun_lulus = ?, jabatan_definitif = ?, level = ?, status_pegawai = ?, kelas_pegawai = ?
        WHERE id_pegawai = ?`,
-      [nama_lengkap, nip, id_jabatan || null, level || 0, id]
+      [
+        id_user || null,
+        nama_lengkap,
+        nip || null,
+        tempat_lahir || null,
+        tanggal_lahir || null,
+        golongan_ruang || null,
+        pendidikan_formal || null,
+        nama_sekolah || null,
+        jurusan || null,
+        tahun_lulus || null,
+        id_jabatan || null,
+        level || 0,
+        status_pegawai || null,
+        kelas_pegawai || null,
+        id,
+      ],
     );
 
     if (result.affectedRows === 0) {
       await connection.rollback();
-      return res.status(404).json({
-        success: false,
-        message: "Pegawai tidak ditemukan",
-      });
+      return res.status(404).json({ success: false, message: "Pegawai tidak ditemukan" });
     }
 
-    // 2️⃣ Update tabel pegawai_hirarki
     if (id_atasan && id_atasan !== "0") {
-      // cek apakah sudah ada relasi
-      const [existing] = await connection.query(
-        "SELECT * FROM pegawai_hirarki WHERE id_pegawai = ?",
-        [id]
-      );
-
+      const [existing] = await connection.query("SELECT * FROM pegawai_hirarki WHERE id_pegawai = ?", [id]);
       if (existing.length > 0) {
-        await connection.query(
-          "UPDATE pegawai_hirarki SET id_atasan = ? WHERE id_pegawai = ?",
-          [id_atasan, id]
-        );
+        await connection.query("UPDATE pegawai_hirarki SET id_atasan = ? WHERE id_pegawai = ?", [id_atasan, id]);
       } else {
-        await connection.query(
-          "INSERT INTO pegawai_hirarki (id_pegawai, id_atasan) VALUES (?, ?)",
-          [id, id_atasan]
-        );
+        await connection.query("INSERT INTO pegawai_hirarki (id_pegawai, id_atasan) VALUES (?, ?)", [id, id_atasan]);
       }
     } else {
-      // kalau pilih tidak ada atasan → hapus relasi
-      await connection.query(
-        "DELETE FROM pegawai_hirarki WHERE id_pegawai = ?",
-        [id]
-      );
+      await connection.query("DELETE FROM pegawai_hirarki WHERE id_pegawai = ?", [id]);
     }
 
     await connection.commit();
 
-    return res.json({
-      success: true,
-      message: "Data pegawai berhasil diperbarui",
-    });
+    return res.json({ success: true, message: "Data pegawai berhasil diperbarui" });
   } catch (err) {
     await connection.rollback();
     console.error("pegawai:update", err);
@@ -182,38 +190,23 @@ export const updatePegawai = async (req, res, next) => {
  */
 export const deletePegawai = async (req, res, next) => {
   const { id } = req.params;
-
   const connection = await pool.getConnection();
 
   try {
     await connection.beginTransaction();
 
-    // 1️⃣ Delete dari pegawai_hirarki (cascade)
-    await connection.query(
-      "DELETE FROM pegawai_hirarki WHERE id_pegawai = ?",
-      [id]
-    );
+    await connection.query("DELETE FROM pegawai_hirarki WHERE id_pegawai = ?", [id]);
 
-    // 2️⃣ Delete dari pegawai
-    const [result] = await connection.query(
-      "DELETE FROM pegawai WHERE id_pegawai = ?",
-      [id]
-    );
+    const [result] = await connection.query("DELETE FROM pegawai WHERE id_pegawai = ?", [id]);
 
     if (result.affectedRows === 0) {
       await connection.rollback();
-      return res.status(404).json({
-        success: false,
-        message: "Pegawai tidak ditemukan",
-      });
+      return res.status(404).json({ success: false, message: "Pegawai tidak ditemukan" });
     }
 
     await connection.commit();
 
-    return res.json({
-      success: true,
-      message: "Pegawai berhasil dihapus",
-    });
+    return res.json({ success: true, message: "Pegawai berhasil dihapus" });
   } catch (err) {
     await connection.rollback();
     console.error("pegawai:delete", err);

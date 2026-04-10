@@ -1,40 +1,48 @@
 import pool from "../config/db.js";
 
-// GET ALL RKA (Dengan Filter Tahun)
+// GET ALL RKA (Dikelompokkan berdasarkan Sub Kegiatan agar jadi 1 Baris Horizontal)
+// GET ALL RKA
 export async function getAllRka(req, res, next) {
   try {
-    // Menangkap ?tahun= dari frontend
     const { tahun } = req.query;
 
     let query = `
         SELECT 
-          rh.id_rka AS id,
-          p.nama_lengkap AS pj_nama,
-          rh.target_kinerja AS target_angka,
+          MAX(rh.id_rka) AS id, 
+          
+          /* KUNCI PERBAIKAN: Ambil id_rka spesifik untuk masing-masing pagu */
+          MAX(CASE WHEN rh.pagu_id = 1 THEN rh.id_rka ELSE NULL END) AS id_murni,
+          MAX(CASE WHEN rh.pagu_id = 2 THEN rh.id_rka ELSE NULL END) AS id_p1,
+          MAX(CASE WHEN rh.pagu_id = 3 THEN rh.id_rka ELSE NULL END) AS id_p2,
+          MAX(CASE WHEN rh.pagu_id = 4 THEN rh.id_rka ELSE NULL END) AS id_efs,
+          MAX(CASE WHEN rh.pagu_id = 5 THEN rh.id_rka ELSE NULL END) AS id_ubah,
+
           rh.id_sub_kegiatan AS subkegiatan_id,
-          rh.id_pj AS penanggungjawab_id,
-          rh.id_pelaksana AS pelaksana_id,
-          rh.pagu_id AS jenis_pagu,
-          rh.tgl_mulai AS tanggal_mulai,
-          rh.tgl_selesai AS tanggal_selesai,
-          rh.satuan AS target_satuan,
+          MAX(p.nama_lengkap) AS pj_nama,
+          MAX(rh.target_kinerja) AS target_angka,
+          MAX(rh.satuan) AS target_satuan,
+          /* TAMBAHKAN 4 BARIS INI UNTUK MENARIK DATA TRIWULAN */
+          MAX(rh.tw_mulai) AS tw_mulai,
+          MAX(rh.mg_mulai) AS mg_mulai,
+          MAX(rh.tw_selesai) AS tw_selesai,
+          MAX(rh.mg_selesai) AS mg_selesai,
           rh.id_tahun AS tahun,
           
-          /* Ambil ID Master dari hasil JOIN */
           rk.program_id AS program_id,
           rsk.kegiatan_id AS kegiatan_id,
           
-          /* Ambil Nama Master */
+          rp.kodering AS prog_kode,
           rp.nama_program AS program_name,
+          rk.kodering AS keg_kode,
           rk.nama_kegiatan AS kegiatan_name,
+          rsk.kodering AS sub_kode,
           rsk.nama_sub AS subkegiatan_name,
           
-          /* Hitung Total */
-          COALESCE(SUM(rb.pagu_murni), 0) AS murni, 
-          COALESCE(SUM(rb.pergeseran_1), 0) AS pergeseran_i,
-          COALESCE(SUM(rb.pergeseran_2), 0) AS pergeseran_ii,
-          COALESCE(SUM(rb.efisiensi), 0) AS efisiensi, 
-          COALESCE(SUM(rb.perubahan), 0) AS perubahan
+          COALESCE(SUM(CASE WHEN rb.pagu_id = 1 THEN rb.total ELSE 0 END), 0) AS murni, 
+          COALESCE(SUM(CASE WHEN rb.pagu_id = 2 THEN rb.total ELSE 0 END), 0) AS pergeseran_i,
+          COALESCE(SUM(CASE WHEN rb.pagu_id = 3 THEN rb.total ELSE 0 END), 0) AS pergeseran_ii,
+          COALESCE(SUM(CASE WHEN rb.pagu_id = 4 THEN rb.total ELSE 0 END), 0) AS efisiensi, 
+          COALESCE(SUM(CASE WHEN rb.pagu_id = 5 THEN rb.total ELSE 0 END), 0) AS perubahan
         FROM rka_header rh
         LEFT JOIN pegawai p ON rh.id_pj = p.id_pegawai
         LEFT JOIN renstra_sub_kegiatan rsk ON rh.id_sub_kegiatan = rsk.id
@@ -49,7 +57,7 @@ export async function getAllRka(req, res, next) {
       queryParams.push(tahun);
     }
 
-    query += ` GROUP BY rh.id_rka ORDER BY rh.id_rka DESC `;
+    query += ` GROUP BY rh.id_sub_kegiatan, rh.id_tahun ORDER BY rp.kodering, rk.kodering, rsk.kodering ASC `;
 
     const [rows] = await pool.query(query, queryParams);
     res.json(rows);
@@ -59,7 +67,9 @@ export async function getAllRka(req, res, next) {
   }
 }
 
-// CREATE RKA (Menyimpan tahun dinamis)
+// ===========================================================================
+// 1. CREATE RKA (DENGAN 4 FIELD PERIODE PELAKSANAAN)
+// ===========================================================================
 export async function createRka(req, res, next) {
   try {
     const {
@@ -68,34 +78,62 @@ export async function createRka(req, res, next) {
       pelaksana_id,
       tanggal_mulai,
       tanggal_selesai,
+      tw_mulai,
+      mg_mulai,
+      tw_selesai,
+      mg_selesai,
       target_sub,
       satuan,
       jenis_pagu,
-      tahun // Diambil dari rkaForm.tahun yang dikirim frontend
+      tahun 
     } = req.body;
 
-    // Gunakan tahun dari frontend, jika tidak ada baru gunakan fallback
     const id_tahun = tahun || new Date().getFullYear().toString();
 
+    const checkQuery = `SELECT id_rka FROM rka_header WHERE id_sub_kegiatan = ? AND pagu_id = ? AND id_tahun = ?`;
+    const [existing] = await pool.query(checkQuery, [subkegiatan_id, jenis_pagu, id_tahun]);
+
+    if (existing.length > 0) {
+        const existingId = existing[0].id_rka;
+        const updateQuery = `
+          UPDATE rka_header 
+          SET id_pj = ?, id_pelaksana = ?, tgl_mulai = ?, tgl_selesai = ?, tw_mulai = ?, mg_mulai = ?, tw_selesai = ?, mg_selesai = ?, target_kinerja = ?, satuan = ?
+          WHERE id_rka = ?
+        `;
+        await pool.query(updateQuery, [
+          penanggungjawab_id || null, pelaksana_id || null, tanggal_mulai || null, tanggal_selesai || null, tw_mulai || null, mg_mulai || null, tw_selesai || null, mg_selesai || null, target_sub || null, satuan || null, existingId
+        ]);
+        
+        return res.status(200).json({
+          message: "Header RKA sudah ada, berhasil menggunakan header yang ada",
+          id_rka: existingId,
+        });
+    }
+
+    // 13 Kolom = 13 Tanda Tanya
+    const insertQuery = `
+        INSERT INTO rka_header 
+        (id_sub_kegiatan, id_tahun, pagu_id, id_pj, id_pelaksana, tgl_mulai, tgl_selesai, tw_mulai, mg_mulai, tw_selesai, mg_selesai, target_kinerja, satuan) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+    
     const values = [
-      subkegiatan_id || null,
-      id_tahun,
-      jenis_pagu || null,
-      penanggungjawab_id || null,
-      pelaksana_id || null,
-      tanggal_mulai || null,
-      tanggal_selesai || null,
-      target_sub || null,
+      subkegiatan_id || null, 
+      id_tahun, 
+      jenis_pagu || null, 
+      penanggungjawab_id || null, 
+      pelaksana_id || null, 
+      tanggal_mulai || null, 
+      tanggal_selesai || null, 
+      tw_mulai || null, 
+      mg_mulai || null, 
+      tw_selesai || null, 
+      mg_selesai || null, 
+      target_sub || null, 
       satuan || null
     ];
 
-    const query = `
-        INSERT INTO rka_header 
-        (id_sub_kegiatan, id_tahun, pagu_id, id_pj, id_pelaksana, tgl_mulai, tgl_selesai, target_kinerja, satuan) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-
-    const [result] = await pool.query(query, values);
+    const [result] = await pool.query(insertQuery, values);
 
     res.status(201).json({
       message: "Data RKA berhasil ditambahkan",
@@ -107,7 +145,9 @@ export async function createRka(req, res, next) {
   }
 }
 
-// UPDATE RKA
+// ===========================================================================
+// 2. UPDATE RKA (DENGAN 4 FIELD PERIODE PELAKSANAAN)
+// ===========================================================================
 export async function updateRka(req, res, next) {
   try {
     const { id } = req.params;
@@ -117,14 +157,15 @@ export async function updateRka(req, res, next) {
       pelaksana_id,
       tanggal_mulai,
       tanggal_selesai,
+      tw_mulai,
+      mg_mulai,
+      tw_selesai,
+      mg_selesai,
       target_sub,
       satuan,
       jenis_pagu,
-      tahun // Kita ambil tahun dari body
+      tahun
     } = req.body;
-
-    // Tambahkan log untuk debug di terminal backend Anda
-    console.log("Updating RKA ID:", id, "dengan data:", req.body);
 
     const query = `
       UPDATE rka_header 
@@ -135,13 +176,16 @@ export async function updateRka(req, res, next) {
         id_pelaksana = ?, 
         tgl_mulai = ?, 
         tgl_selesai = ?, 
+        tw_mulai = ?, 
+        mg_mulai = ?, 
+        tw_selesai = ?, 
+        mg_selesai = ?,
         target_kinerja = ?,
         satuan = ?,
         id_tahun = ?
       WHERE id_rka = ?
     `;
 
-    // Pastikan urutan values SAMA dengan urutan tanda tanya (?) di query atas
     const values = [
       subkegiatan_id || null,
       jenis_pagu || null,
@@ -149,10 +193,14 @@ export async function updateRka(req, res, next) {
       pelaksana_id || null,
       tanggal_mulai || null,
       tanggal_selesai || null,
+      tw_mulai || null,
+      mg_mulai || null,
+      tw_selesai || null,
+      mg_selesai || null,
       target_sub || null,
       satuan || null,
-      tahun || null, // Ini mengisi id_tahun
-      id             // Ini untuk WHERE id_rka
+      tahun || null, 
+      id             
     ];
 
     const [result] = await pool.query(query, values);
@@ -163,16 +211,13 @@ export async function updateRka(req, res, next) {
 
     res.json({ message: "Data RKA berhasil diperbarui" });
   } catch (err) {
-    console.error("ERROR UPDATE RKA:", err.sqlMessage || err.message);
-    // Mengirim pesan error yang lebih detail ke frontend agar mudah dilacak
-    res.status(500).json({ 
-      message: "Gagal update database", 
-      error: err.sqlMessage || err.message 
-    });
+    res.status(500).json({ message: "Gagal update database", error: err.sqlMessage || err.message });
   }
 }
 
-// SAVE BELANJA (Transaction support)
+// ===========================================================================
+// 2. SAVE BELANJA (DENGAN LOGIKA AUTO-CLEANUP HEADER KOSONG)
+// ===========================================================================
 export async function saveBelanja(req, res, next) {
   const connection = await pool.getConnection();
   try {
@@ -181,67 +226,37 @@ export async function saveBelanja(req, res, next) {
 
     await connection.beginTransaction();
 
-    // Hapus data lama agar tidak duplikat
+    // 1. Hapus semua rincian belanja lama untuk menggantinya dengan yang baru
     await connection.execute("DELETE FROM rka_belanja WHERE id_rka = ?", [id]);
 
+    // 2. AUTO-CLEANUP: Jika user menghapus semua daftar belanja (tabel kosong),
+    // hapus juga Headernya sekalian agar database tidak dipenuhi cangkang kosong!
+    if (!items || items.length === 0) {
+        await connection.execute("DELETE FROM rka_header WHERE id_rka = ?", [id]);
+        await connection.commit();
+        return res.status(200).json({ message: "Semua belanja dihapus. Header RKA otomatis dibersihkan!" });
+    }
+
+    // 3. Jika items ada isinya, simpan rincian belanja baru
     const query = `
         INSERT INTO rka_belanja 
-        (id_rka, uraian_belanja, koefisien, volume, harga_satuan, pergeseran_1, pergeseran_2, efisiensi, perubahan) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id_rka, pagu_id, uraian_belanja, koefisien, volume, harga_satuan) 
+        VALUES (?, ?, ?, ?, ?, ?)
       `;
 
     for (const item of items) {
-      const totalNilai = (item.perhitungan || 0) * (item.harga_satuan || 0);
-      
-      let vol = 0;
-      let harga = 0;
-      let p1 = 0;
-      let p2 = 0;
-      let efisiensi = 0;
-      let perubahan = 0;
-
-      // PEMETAAN BERDASARKAN ID JENIS PAGU
-      // Sesuaikan angka string "1", "2" dsb dengan ID di tabel master_pagu Anda
-      const tipe = String(jenis_pagu);
-
-      switch (tipe) {
-        case "1": // PAGU MURNI
-          vol = item.perhitungan || 0;
-          harga = item.harga_satuan || 0;
-          break;
-        case "2": // PERGESERAN I
-          p1 = totalNilai;
-          break;
-        case "3": // PERGESERAN II
-          p2 = totalNilai;
-          break;
-        case "4": // EFISIENSI
-          efisiensi = totalNilai;
-          break;
-        case "5": // PERUBAHAN
-          perubahan = totalNilai;
-          break;
-        default:
-          // Default jika tidak ada yang cocok, masuk ke murni
-          vol = item.perhitungan || 0;
-          harga = item.harga_satuan || 0;
-      }
-
       await connection.execute(query, [
         id,
-        item.belanja,
-        item.koef || "",
-        vol,
-        harga,
-        p1,
-        p2,
-        efisiensi,
-        perubahan
+        jenis_pagu || null,          
+        item.belanja,                
+        item.koef || "",             
+        item.perhitungan || 0,       
+        item.harga_satuan || 0       
       ]);
     }
 
     await connection.commit();
-    res.status(201).json({ message: "Rincian Belanja (termasuk Efisiensi) berhasil disimpan!" });
+    res.status(201).json({ message: "Rincian Belanja berhasil disimpan!" });
   } catch (err) {
     await connection.rollback();
     console.error("Error Detail:", err.message);
@@ -251,26 +266,34 @@ export async function saveBelanja(req, res, next) {
   }
 }
 
-// GET BELANJA BY RKA ID
+// GET BELANJA BY RKA ID (Dan filter by Pagu ID jika ada)
 export async function getBelanjaByRka(req, res, next) {
   try {
     const { id } = req.params;
-    const query = `
+    const { pagu_id } = req.query; // Menangkap filter pagu_id dari frontend
+
+    let query = `
       SELECT 
         id_belanja AS id,
+        pagu_id,
         uraian_belanja AS belanja,
         koefisien AS koef,
         volume AS perhitungan,
         harga_satuan,
-        (volume * harga_satuan) AS murni,
-        pergeseran_1 AS pergeseran_i,
-        pergeseran_2 AS pergeseran_ii,
-        perubahan,
-        realisasi
+        total
       FROM rka_belanja 
       WHERE id_rka = ?
     `;
-    const [rows] = await pool.query(query, [id]);
+
+    const queryParams = [id];
+
+    // Jika frontend mengirimkan spesifik pagu_id (Murni, Pergeseran, dll), filter datanya
+    if (pagu_id) {
+      query += ` AND pagu_id = ?`;
+      queryParams.push(pagu_id);
+    }
+
+    const [rows] = await pool.query(query, queryParams);
     res.json(rows);
   } catch (err) {
     next(err);

@@ -243,7 +243,7 @@ export default function RenstraProgramsComponent({ apiBase = "/programs" }) {
                       <tr key={`s-${s.id}`} className="bg-emerald-50/20 hover:bg-emerald-50/50 transition-colors group">
                         <td className="sticky left-0 z-30 bg-inherit pl-28 pr-6 py-3 border-b border-r border-slate-300 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                             <span className="text-[8px] bg-emerald-100 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded uppercase font-black mb-1 inline-block tracking-tighter">Sub-Kegiatan</span>
-                            <div className="text-xs font-semibold text-slate-600 uppercase tracking-tighter leading-tight">{s.kodering} {s.name}</div>
+                            <div className="text-xs font-black text-emerald-900 uppercase tracking-tighter leading-tight">{s.kodering} {s.name}</div>
                         </td>
                         <td className="px-4 py-3 border-b border-r border-slate-300 text-[10px] text-slate-500 italic">
                             {s.indikator || "-"}

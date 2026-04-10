@@ -202,11 +202,11 @@ export const loginUser = async (req, res) => {
     );
 
     // ✅ Update last_login
-    try {
-      await pool.query("UPDATE users SET last_login = NOW() WHERE id = ?", [user.id]);
-    } catch (err) {
-      console.warn("Could not update last_login:", err);
-    }
+    // try {
+    //   await pool.query("UPDATE users SET last_login = NOW() WHERE id = ?", [user.id]);
+    // } catch (err) {
+    //   console.warn("Could not update last_login:", err);
+    // }
 
     // ✅ Build avatar URL
     const avatarUrl = user.avatar

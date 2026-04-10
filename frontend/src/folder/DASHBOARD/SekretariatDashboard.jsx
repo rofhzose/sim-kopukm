@@ -23,6 +23,7 @@ import {
   Users,
   Briefcase,
   File,
+  Package,
 } from "lucide-react";
 
 /* ================= DOC BUTTON ================= */
@@ -75,6 +76,8 @@ export default function DokumenKesekretariatan() {
   const umumBtnList = [
     { label: "Pegawai", icon: Users, colorBg: "bg-gray-50", colorText: "text-gray-800" },
     { label: "Jabatan", icon: Briefcase, colorBg: "bg-yellow-50", colorText: "text-yellow-800" },
+    { label: "INVENTARIS", icon: Package, colorBg: "bg-orange-50", colorText: "text-orange-800" },
+    { label: "BUKU TAMU", icon: Clipboard, colorBg: "bg-emerald-50", colorText: "text-emerald-700" },
   ];
 
   /* ================= RENDER ================= */
@@ -121,7 +124,7 @@ export default function DokumenKesekretariatan() {
             <div className="bg-amber-100 p-2 rounded-xl">
               <Users className="w-5 h-5 text-amber-600" />
             </div>
-            <h2 className="text-xl font-black text-slate-800">Umum & Kepegawaian</h2>
+            <h2 className="text-xl font-black text-slate-800">Umum, Kepegawaian & Aset</h2>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

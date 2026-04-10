@@ -9,13 +9,11 @@ export default function RkaPage() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
-  const years = ["2026", "2027", "2028", "2029", "2030"]; // Daftar tahun anggaran
+  const years = ["2024", "2025", "2026", "2027", "2028", "2029", "2030"];
 
-  // State Kontrol Tampilan
   const [showInputModal, setShowInputModal] = useState(false);
   const [showBelanjaStep, setShowBelanjaStep] = useState(false);
 
-  // State Data
   const [currentRkaDetail, setCurrentRkaDetail] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -28,9 +26,13 @@ export default function RkaPage() {
     pelaksana_id: "",
     tanggal_mulai: "",
     tanggal_selesai: "",
+    tw_mulai: "",
+    mg_mulai: "",
+    tw_selesai: "",
+    mg_selesai: "",
     target_sub: "",
-    jenis_pagu: "",
-    satuan_id: "",
+    jenis_pagu: "1", // Default ke Pagu Murni
+    satuan_id: ""
   });
 
   const [options, setOptions] = useState({
@@ -41,18 +43,44 @@ export default function RkaPage() {
     pagu: [],
     satuan: [],
   });
+
   useEffect(() => {
     loadInitialMaster();
   }, []);
 
-  // 3. Fetch List RKA (Setiap kali tahun berubah)
   useEffect(() => {
     fetchList();
   }, [selectedYear]);
+  useEffect(() => {
+    if (rkaForm.tanggal_mulai && rkaForm.tanggal_selesai) {
+      const startDate = new Date(rkaForm.tanggal_mulai);
+      const endDate = new Date(rkaForm.tanggal_selesai);
+
+      const startMonth = startDate.getMonth(); 
+      const endMonth = endDate.getMonth();
+
+      // Hitung Triwulan (1, 2, 3, 4)
+      const startQ = Math.floor(startMonth / 3) + 1;
+      const endQ = Math.floor(endMonth / 3) + 1;
+
+      // Hitung Minggu Ke- (1 - 5) dalam bulan tersebut
+      const startW = Math.ceil(startDate.getDate() / 7);
+      const endW = Math.ceil(endDate.getDate() / 7);
+
+      setRkaForm(prev => ({ 
+        ...prev, 
+        tw_mulai: startQ,
+        mg_mulai: startW,
+        tw_selesai: endQ,
+        mg_selesai: endW
+      }));
+    }
+  }, [rkaForm.tanggal_mulai, rkaForm.tanggal_selesai]);
+
+  
   async function fetchList() {
     setLoading(true);
     try {
-      // Mengirimkan ?tahun=2026 ke backend
       const res = await axiosInstance.get(`/rka?tahun=${selectedYear}`);
       setList(res.data || []);
     } catch (err) {
@@ -62,20 +90,22 @@ export default function RkaPage() {
     }
   }
 
-  // Fungsi loadInitialMaster tetap sama
   async function loadInitialMaster() {
     try {
-      const [p, pg, pa, sa] = await Promise.all([axiosInstance.get("/master/programs"), axiosInstance.get("/master/pegawai"), axiosInstance.get("/master/pagu"), axiosInstance.get("/master/satuan")]);
-      setOptions((prev) => ({
+      const [p, pg, pa, sa] = await Promise.all([
+        axiosInstance.get("/master/programs"),
+        axiosInstance.get("/master/pegawai"),
+        axiosInstance.get("/master/pagu"),
+        axiosInstance.get("/master/satuan")
+      ]);
+      setOptions(prev => ({
         ...prev,
         programs: p.data,
         pegawai: pg.data,
         pagu: pa.data,
-        satuan: sa.data,
+        satuan: sa.data
       }));
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   }
 
   const fetchKegiatan = async (programId) => {
@@ -98,34 +128,58 @@ export default function RkaPage() {
     }
   };
 
-  const handleEdit = async (row) => {
+  // Tambahkan paguId dengan nilai default "1" di parameternya
+  const handleEdit = async (row, paguId = "1") => {
     setLoading(true);
     try {
-      setIsEditMode(true);
-      setEditingId(row.id);
+      // 1. Tentukan id_rka SPESIFIK berdasarkan jenis pagu yang diklik
+      let specificId = null;
+      if (paguId === "1") specificId = row.id_murni;
+      if (paguId === "2") specificId = row.id_p1;
+      if (paguId === "3") specificId = row.id_p2;
+      if (paguId === "4") specificId = row.id_efs;
+      if (paguId === "5") specificId = row.id_ubah;
 
-      // Load data cascading agar dropdown terisi saat edit
-      await Promise.all([fetchKegiatan(row.program_id), fetchSubKegiatan(row.kegiatan_id)]);
+      // 2. Set mode: Jika sudah ada id-nya -> Edit. Jika belum (diklik dari nol) -> Buat Baru
+      if (specificId) {
+        setIsEditMode(true);
+        setEditingId(specificId);
+      } else {
+        setIsEditMode(false);
+        setEditingId(null);
+      }
 
+      // Pre-load kegiatan & sub untuk form dropdown
+      await Promise.all([
+        fetchKegiatan(row.program_id),
+        fetchSubKegiatan(row.kegiatan_id)
+      ]);
+
+      // 3. Pre-fill Form (meskipun pagu baru, struktur Program/Kegiatan tetap di-load otomatis)
       setRkaForm({
         program_id: row.program_id,
         kegiatan_id: row.kegiatan_id,
         subkegiatan_id: row.subkegiatan_id,
-        penanggungjawab_id: row.penanggungjawab_id,
-        pelaksana_id: row.pelaksana_id,
-        tanggal_mulai: row.tanggal_mulai ? row.tanggal_mulai.split("T")[0] : "",
-        tanggal_selesai: row.tanggal_selesai ? row.tanggal_selesai.split("T")[0] : "",
+        penanggungjawab_id: row.penanggungjawab_id || row.id_pj,
+        pelaksana_id: row.pelaksana_id || row.id_pelaksana,
+        tanggal_selesai: row.tanggal_selesai ? row.tanggal_selesai.split('T')[0] : "",
+        tw_mulai: row.tw_mulai || "",
+        mg_mulai: row.mg_mulai || "",
+        tw_selesai: row.tw_selesai || "",
+        mg_selesai: row.mg_selesai || "",
         target_sub: row.target_angka,
-        target_satuan: row.target_satuan, // Different key name
-        jenis_pagu: row.jenis_pagu || row.pagu_id,
-        satuan_id: row.satuan_id,
+        jenis_pagu: String(paguId), // Kunci pagu aktif
+        satuan_id: row.target_satuan || row.satuan_id
       });
 
       setCurrentRkaDetail({
-        program: { name: row.program_name },
-        kegiatan: { name: row.kegiatan_name },
-        subkegiatan: { name: row.subkegiatan_name },
-        pelaksana: { nama: row.pelaksana_name || "Petugas" },
+        program_name: row.program_name,
+        kegiatan_name: row.kegiatan_name,
+        subkegiatan_name: row.subkegiatan_name,
+        pj_nama: row.pj_nama || row.penanggungjawab_nama,
+        pelaksana_nama: row.pelaksana_nama || row.nama_pelaksana,
+        pj_jabatan: row.pj_jabatan,
+        pelaksana_jabatan: row.pelaksana_jabatan
       });
 
       setShowBelanjaStep(true);
@@ -141,70 +195,75 @@ export default function RkaPage() {
     try {
       let rkaId = editingId;
 
-      // 1. Siapkan Payload Header secara Eksplisit
-      // Pastikan semua field yang dibutuhkan Backend ada di sini
+      // PAYLOAD DIPERKUAT: Mengakomodasi penamaan lama dan nama kolom DB dari visual FK constraint
       const headerPayload = {
+        // Penamaan default
         subkegiatan_id: rkaForm.subkegiatan_id,
         penanggungjawab_id: rkaForm.penanggungjawab_id,
         pelaksana_id: rkaForm.pelaksana_id,
+        jenis_pagu: rkaForm.jenis_pagu,
+
+        // Mapping langsung ke nama kolom database agar aman dari FK Error
+        id_sub_kegiatan: rkaForm.subkegiatan_id,
+        id_pj: rkaForm.penanggungjawab_id,
+        id_pelaksana: rkaForm.pelaksana_id,
+        pagu_id: rkaForm.jenis_pagu,
+
         tanggal_mulai: rkaForm.tanggal_mulai,
         tanggal_selesai: rkaForm.tanggal_selesai,
+        tw_mulai: rkaForm.tw_mulai,
+        mg_mulai: rkaForm.mg_mulai,
+        tw_selesai: rkaForm.tw_selesai,
+        mg_selesai: rkaForm.mg_selesai,
         target_sub: rkaForm.target_sub,
         satuan: rkaForm.satuan_id,
-        jenis_pagu: rkaForm.jenis_pagu,
-        tahun: selectedYear, // Mengambil dari state selectedYear di RkaPage
+        tahun: selectedYear,
       };
 
-      // 2. Eksekusi Update atau Create Header
       if (isEditMode) {
         await axiosInstance.put(`/rka/${editingId}`, headerPayload);
       } else {
         const res = await axiosInstance.post("/rka", headerPayload);
-        // Ambil ID yang baru saja dibuat oleh database
         rkaId = res.data.id_rka || res.data.id;
       }
 
-      // 3. Simpan Rincian Belanja
-      // Kita bungkus dalam satu request post ke endpoint belanja
       await axiosInstance.post(`/rka/${rkaId}/belanja`, {
         items: belanjaRows,
-        jenis_pagu: rkaForm.jenis_pagu,
+        jenis_pagu: rkaForm.jenis_pagu
       });
 
-      alert("Data RKA dan Rincian Belanja Berhasil Disimpan!");
+      alert("Data Berhasil Disimpan!");
+      handleCloseAll();
+      fetchList();
 
-      // 4. Cleanup & Refresh
-      handleCloseAll(); // Tutup modal/form
-      if (typeof fetchList === "function") fetchList(); // Refresh tabel utama
     } catch (err) {
-      // Log error lebih detail agar mudah di-debug di console
-      console.error("Detail Error Simpan:", err.response?.data || err.message);
-
-      const msg = err.response?.data?.message || "Terjadi kesalahan pada server";
-      alert("Gagal menyimpan: " + msg);
+      console.error("Save Error:", err.response?.data || err.message);
+      alert("Gagal menyimpan: " + (err.response?.data?.message || err.message));
     }
   };
+
   const handleCloseAll = () => {
     setShowInputModal(false);
     setShowBelanjaStep(false);
     setIsEditMode(false);
     setEditingId(null);
     setRkaForm({
-      program_id: "",
-      kegiatan_id: "",
-      subkegiatan_id: "",
-      penanggungjawab_id: "",
-      pelaksana_id: "",
-      tanggal_mulai: "",
-      tanggal_selesai: "",
-      target_sub: "",
-      jenis_pagu: "",
-      satuan_id: "",
+      program_id: "", kegiatan_id: "", subkegiatan_id: "",
+      penanggungjawab_id: "", pelaksana_id: "",
+      tanggal_mulai: "", tanggal_selesai: "",
+      target_sub: "", jenis_pagu: "1", satuan_id: ""
     });
   };
 
   if (loading && !showBelanjaStep) {
-    return <div className="p-20 text-center font-bold text-blue-600 animate-pulse">MEMUAT DATA...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="font-black text-slate-400 text-xs tracking-widest uppercase">Sinkronisasi Data...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -215,34 +274,32 @@ export default function RkaPage() {
             <div className="space-y-1">
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-black text-slate-800 tracking-tight">RKA</h1>
-                <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-black tracking-widest border border-blue-200">TA {selectedYear}</div>
+                <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-black tracking-widest border border-blue-200">
+                  TA {selectedYear}
+                </div>
               </div>
               <p className="text-slate-500 text-sm font-medium">Manajemen Rencana Kerja Anggaran</p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-              {/* Selector Tahun Anggaran */}
-              <div className="flex items-center bg-white border border-slate-200 rounded-2xl p-1.5 shadow-sm group hover:border-blue-400 transition-all">
-                <div className="px-3 py-1.5 text-slate-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 pr-10 cursor-pointer outline-none">
+              <div className="flex items-center bg-white border border-slate-200 rounded-2xl p-1.5 shadow-sm hover:border-blue-400 transition-all">
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 px-4 cursor-pointer outline-none"
+                >
                   {years.map((y) => (
-                    <option key={y} value={y}>
-                      Tahun Anggaran {y}
-                    </option>
+                    <option key={y} value={y}>TA {y}</option>
                   ))}
                 </select>
               </div>
-
+ 
               <button
                 onClick={() => setShowInputModal(true)}
                 className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 <span className="text-xl">+</span>
-                INPUT RKA {selectedYear}
+                INPUT RKA
               </button>
             </div>
           </header>
@@ -254,7 +311,14 @@ export default function RkaPage() {
           </div>
         </>
       ) : (
-        <BelanjaSection currentRkaDetail={currentRkaDetail} rkaForm={rkaForm} onSave={handleSaveBelanja} onCancel={handleCloseAll} isEditMode={isEditMode} editingId={editingId} />
+        <BelanjaSection
+          currentRkaDetail={currentRkaDetail}
+          rkaForm={{ ...rkaForm, tahun: selectedYear }}
+          onSave={handleSaveBelanja}
+          onCancel={handleCloseAll}
+          isEditMode={isEditMode}
+          editingId={editingId}
+        />
       )}
 
       {showInputModal && (
@@ -262,44 +326,43 @@ export default function RkaPage() {
           setShowInputModal={setShowInputModal}
           rkaForm={{ ...rkaForm, tahun: selectedYear }}
           onChangeForm={(key, value) => {
-            // 1. Update state dasar
             setRkaForm((prev) => ({ ...prev, [key]: value }));
 
-            // 2. Logika Cascade: Program -> Kegiatan
             if (key === "program_id") {
-              setRkaForm((p) => ({ ...p, kegiatan_id: "", subkegiatan_id: "", satuan_id: "" }));
+              setRkaForm((p) => ({ ...p, kegiatan_id: "", subkegiatan_id: "" }));
               fetchKegiatan(value);
             }
-
-            // 3. Logika Cascade: Kegiatan -> Sub Kegiatan
             if (key === "kegiatan_id") {
-              setRkaForm((p) => ({ ...p, subkegiatan_id: "", satuan_id: "" }));
+              setRkaForm((p) => ({ ...p, subkegiatan_id: "" }));
               fetchSubKegiatan(value);
             }
-
-            // 4. Logika Otomatisasi Satuan saat Sub Kegiatan dipilih
             if (key === "subkegiatan_id") {
               const selectedSub = options.subkegiatan.find((s) => s.id == value);
-              if (selectedSub && selectedSub.satuan) {
-                // Mengisi satuan_id secara otomatis dari master renstra_sub_kegiatan
+              if (selectedSub?.satuan) {
                 setRkaForm((p) => ({ ...p, satuan_id: selectedSub.satuan }));
               }
             }
           }}
           handleSubmitRka={() => {
-            // Mencari data objek lengkap untuk ditampilkan di ringkasan (header belanja)
             const prog = options.programs.find((p) => p.id == rkaForm.program_id);
             const keg = options.kegiatan.find((k) => k.id == rkaForm.kegiatan_id);
             const sub = options.subkegiatan.find((s) => s.id == rkaForm.subkegiatan_id);
-            const pel = options.pegawai.find((p) => p.id == rkaForm.pelaksana_id);
 
+            // CARI DATA PEGAWAI BERDASARKAN ID
+            // Menyesuaikan apakah ID pegawai di DB bernama 'id' atau 'id_pegawai'
+            const pj = options.pegawai.find((p) => p.id == rkaForm.penanggungjawab_id || p.id_pegawai == rkaForm.penanggungjawab_id);
+            const pelaksana = options.pegawai.find((p) => p.id == rkaForm.pelaksana_id || p.id_pegawai == rkaForm.pelaksana_id);
+
+            // MAPPING DETAIL UNTUK BELANJA SECTION SAAT TAMBAH BARU
             setCurrentRkaDetail({
-              program: prog || { name: "Program" },
-              kegiatan: keg || { name: "Kegiatan" },
-              subkegiatan: sub || { name: "Sub Kegiatan" },
-              pelaksana: pel || { nama: "Pelaksana" },
-              // Tambahkan info target ke detail untuk review
-              target: `${rkaForm.target_sub} ${rkaForm.satuan_id}`,
+              program_name: prog?.nama_program || prog?.name || "N/A",
+              kegiatan_name: keg?.nama_kegiatan || keg?.name || "N/A",
+              subkegiatan_name: sub?.nama_sub || sub?.name || "N/A",
+              pj_nama: pj?.nama_pegawai || pj?.nama || "-",
+              pj_jabatan: pj?.jabatan || "Pejabat Struktural",
+              pelaksana_nama: pelaksana?.nama_pegawai || pelaksana?.nama || "-",
+              pelaksana_jabatan: pelaksana?.jabatan || "Staf Pelaksana",
+              target: `${rkaForm.target_sub} ${rkaForm.satuan_id}`
             });
 
             setShowInputModal(false);
@@ -310,7 +373,7 @@ export default function RkaPage() {
           subkegiatanOptions={options.subkegiatan}
           pegawaiList={options.pegawai}
           paguOptions={options.pagu}
-          satuanOptions={options.satuan} // Data dari getSatuan (SELECT DISTINCT)
+          satuanOptions={options.satuan}
         />
       )}
     </div>

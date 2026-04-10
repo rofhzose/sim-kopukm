@@ -155,11 +155,7 @@ export default function PerjanjianKinerjaPage() {
             </div>
           </div>
         </main>
-
-        {/* Footer */}
-        <Footer>
-          <p className="mt-2 sm:mt-0">E-Planning Dinkopukm Karawang • Ver 2.1</p>
-        </Footer>
+       
       </div>
     </div>
   );

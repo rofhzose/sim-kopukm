@@ -1,4 +1,4 @@
-export function formatIdr(x) {
+export default function formatIdr(x) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",

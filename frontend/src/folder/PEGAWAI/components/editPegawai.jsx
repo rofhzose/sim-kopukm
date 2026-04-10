@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getPegawai, updatePegawai } from "../../../services/pegawaiService";
-import { getJabatanSortedByLevel } from "../../../services/jabatanService";
+import { getJabatanSortedByKelas } from "../../../services/jabatanService"; // ← ganti import
 import FormPegawai from "./formPegawai";
 
 export default function EditPegawai() {
@@ -12,24 +12,20 @@ export default function EditPegawai() {
   const [jabatanList, setJabatanList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, [id]);
+  useEffect(() => { fetchData(); }, [id]);
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
-
-      // Fetch pegawai yang sedang di-edit
       const pegawaiResponse = await getPegawai();
       const allPegawai = pegawaiResponse?.data?.data || [];
-      const currentPegawai = allPegawai.find((p) => p.id_pegawai.toString() === id.toString());
-      
+      const currentPegawai = allPegawai.find(
+        (p) => p.id_pegawai.toString() === id.toString()
+      );
       setPegawai(currentPegawai);
       setPegawaiList(allPegawai);
 
-      // Fetch jabatan list (sorted by level)
-      const jabatanResponse = await getJabatanSortedByLevel();
+      const jabatanResponse = await getJabatanSortedByKelas(); // ← ganti
       setJabatanList(jabatanResponse?.data?.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -52,10 +48,13 @@ export default function EditPegawai() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat data...</p>
+          <div className="relative w-16 h-16 mx-auto mb-4">
+            <div className="absolute inset-0 rounded-full border-4 border-blue-200" />
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-cyan-400 animate-spin" />
+          </div>
+          <p className="text-gray-600 font-medium">Memuat data...</p>
         </div>
       </div>
     );
@@ -63,12 +62,12 @@ export default function EditPegawai() {
 
   if (!pegawai) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100">
         <div className="text-center">
-          <p className="text-red-600 mb-4">Pegawai tidak ditemukan</p>
+          <p className="text-red-600 mb-4 font-medium">Pegawai tidak ditemukan</p>
           <button
             onClick={() => navigate("/dokumen/pegawai")}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             Kembali
           </button>

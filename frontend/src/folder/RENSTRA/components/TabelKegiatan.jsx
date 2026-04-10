@@ -11,6 +11,7 @@ export default function TabelKegiatan({ kegiatans = [], YEARS = [], onSuccess })
   const [showEditModal, setShowEditModal] = useState(false); 
   const [selectedKegiatan, setSelectedKegiatan] = useState(null);
   const [expandedKegiatans, setExpandedKegiatans] = useState({});
+  const [subRefreshKeys, setSubRefreshKeys] = useState({});
 
   const toggleKegiatan = (kegiatanId) => {
     setExpandedKegiatans(prev => ({ ...prev, [kegiatanId]: !prev[kegiatanId] }));
@@ -26,6 +27,13 @@ export default function TabelKegiatan({ kegiatans = [], YEARS = [], onSuccess })
     e.stopPropagation();
     setSelectedKegiatan(kegiatan);
     setShowEditModal(true);
+  };
+
+  const handleSubSuccess = (kegiatanId) => {
+    // Trigger refresh for TabelSub by incrementing key
+    setSubRefreshKeys(prev => ({ ...prev, [kegiatanId]: (prev[kegiatanId] || 0) + 1 }));
+    // Also call parent refresh to update anggaran totals if needed
+    onSuccess();
   };
 
   const handleDelete = async (e, kegiatan) => {
@@ -56,40 +64,40 @@ export default function TabelKegiatan({ kegiatans = [], YEARS = [], onSuccess })
       {kegiatans.map((k) => (
         <React.Fragment key={`group-keg-${k.id}`}>
           <tr 
-            className="bg-amber-50/30 hover:bg-amber-100/50 transition-colors group cursor-pointer text-[12px]" 
+            className="bg-amber-50 hover:bg-amber-100 transition-colors group cursor-pointer text-sm" 
             onClick={() => toggleKegiatan(k.id)}
           >
             {/* STICKY LEFT: Background harus SOLID (Putih atau Amber Solid) */}
-            <td className="sticky left-0 z-30 bg-[#fdfcf9] group-hover:bg-[#f9f5eb] pl-12 pr-6 py-4 border-b border-r border-slate-200 font-bold text-slate-700">
+            <td className="sticky left-0 z-30 bg-amber-50 group-hover:bg-amber-100 pl-12 pr-6 py-4 border-b border-r border-slate-200 font-semibold text-slate-700">
               <div className="flex gap-3 items-start">
                 <div className={`mt-1 p-1 rounded transition-all border ${expandedKegiatans[k.id] ? 'bg-amber-500 border-amber-500 text-white rotate-180' : 'bg-white border-amber-200 text-amber-500'}`}>
-                   <ChevronDown size={10} />
+                   <ChevronDown size={14} />
                 </div>
                 <div>
-                  <span className="text-[8px] bg-amber-500 text-white px-1.5 py-0.5 rounded-sm uppercase mb-1 inline-block font-black tracking-tighter">Kegiatan</span>
-                  <div className="leading-tight uppercase tracking-tighter">
-                    <span className="text-amber-600 font-black mr-1">{k.kodering}</span> {k.nama_kegiatan}
+                  <span className="text-xs bg-amber-500 text-white px-1.5 py-0.5 rounded-sm uppercase mb-1 inline-block font-bold tracking-wider">Kegiatan</span>
+                  <div className="leading-tight uppercase tracking-wide">
+                    <span className="text-amber-600 font-bold mr-1">{k.kodering}</span> {k.nama_kegiatan}
                   </div>
                 </div>
               </div>
             </td>
 
-            <td className="px-4 py-4 border-b border-r border-slate-200 font-bold text-amber-700 italic bg-amber-50/10">
+            <td className="px-4 py-4 border-b border-r border-slate-200 font-medium text-amber-700 italic">
               {k.indikator_kegiatan || "-"}
             </td>
-            <td className="px-4 py-4 border-b border-r border-slate-200 font-medium text-slate-400 italic">
+            <td className="px-4 py-4 border-b border-r border-slate-200 font-medium text-slate-500 italic">
               {k.output_kegiatan || "-"}
             </td>
-            <td className="px-4 py-4 border-b border-r border-slate-200 text-center font-bold text-slate-500">{k.satuan || "%"}</td>
+            <td className="px-4 py-4 border-b border-r border-slate-200 text-center font-semibold text-slate-500">{k.satuan || "%"}</td>
             
             {YEARS.map(y => {
                 const ang = k.anggaran?.find(a => Number(a.tahun) === Number(y));
                 return (
                     <React.Fragment key={`v-keg-${y}-${k.id}`}>
-                        <td className="px-3 py-4 border-b border-r border-slate-200 text-center font-bold text-slate-600">
+                        <td className="px-3 py-4 border-b border-r border-slate-200 text-center font-semibold text-slate-600">
                           {ang ? parseFloat(ang.target).toLocaleString('id-ID') : "0"}
                         </td>
-                        <td className="px-3 py-4 border-b border-r border-slate-200 text-right font-black text-amber-700 bg-amber-50/40">
+                        <td className="px-3 py-4 border-b border-r border-slate-200 text-right font-semibold text-amber-700 bg-amber-100/50">
                           {ang ? Number(ang.pagu).toLocaleString('id-ID') : "0"}
                         </td>
                     </React.Fragment>
@@ -97,23 +105,23 @@ export default function TabelKegiatan({ kegiatans = [], YEARS = [], onSuccess })
             })}
 
             {/* STICKY RIGHT: Background harus SOLID */}
-            <td className="sticky right-0 z-30 bg-[#fdfcf9] group-hover:bg-[#f9f5eb] px-4 py-4 border-b border-l border-slate-200">
+            <td className="sticky right-0 z-30 bg-amber-50 group-hover:bg-amber-100 px-4 py-4 border-b border-l border-slate-200">
                 <div className="flex items-center justify-center gap-2">
-                    <button onClick={(e) => handleOpenAddSub(e, k)} className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-sm transition-all active:scale-90" title="Tambah Sub">
-                        <Plus size={12} />
+                    <button onClick={(e) => handleOpenAddSub(e, k)} className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-sm transition-all active:scale-95" title="Tambah Sub">
+                        <Plus size={14} />
                     </button>
-                    <button onClick={(e) => handleOpenEdit(e, k)} className="p-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 shadow-sm transition-all active:scale-90" title="Edit Kegiatan">
-                        <Edit3 size={12} />
+                    <button onClick={(e) => handleOpenEdit(e, k)} className="p-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 shadow-sm transition-all active:scale-95" title="Edit Kegiatan">
+                        <Edit3 size={14} />
                     </button>
-                    <button onClick={(e) => handleDelete(e, k)} className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 shadow-sm transition-all active:scale-90" title="Hapus Kegiatan">
-                        <Trash2 size={12} />
+                    <button onClick={(e) => handleDelete(e, k)} className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 shadow-sm transition-all active:scale-95" title="Hapus Kegiatan">
+                        <Trash2 size={14} />
                     </button>
                 </div>
             </td>
           </tr>
 
           {expandedKegiatans[k.id] && (
-             <TabelSub kegiatanId={k.id} YEARS={YEARS} />
+             <TabelSub kegiatanId={k.id} YEARS={YEARS} key={`sub-list-${k.id}`} refreshKey={subRefreshKeys[k.id] || 0} />
           )}
         </React.Fragment>
       ))}
@@ -121,7 +129,12 @@ export default function TabelKegiatan({ kegiatans = [], YEARS = [], onSuccess })
       <AddSubModal 
         open={showSubModal} 
         onClose={() => setShowSubModal(false)} 
-        onSuccess={onSuccess} 
+        onSuccess={() => {
+          if (selectedKegiatan) {
+             handleSubSuccess(selectedKegiatan.id);
+             setExpandedKegiatans(prev => ({ ...prev, [selectedKegiatan.id]: true }));
+          }
+        }} 
         kegiatanId={selectedKegiatan?.id} 
         kegiatanName={selectedKegiatan?.nama_kegiatan} 
       />
