@@ -8,7 +8,6 @@ router.get("/dashboard", async (req, res, next) => {
   try {
     const { tahun } = req.query;
 
-    // ── 1. Data per layanan ──────────────────────────────────────
     const [layanan] = await pool.query(
       `SELECT 
         nama_layanan,
@@ -22,7 +21,6 @@ router.get("/dashboard", async (req, res, next) => {
       [tahun]
     );
 
-    // ── 2. Total responden ───────────────────────────────────────
     const [stat] = await pool.query(
       `SELECT COUNT(*) AS total_responden FROM skmsurvey WHERE tahun = ?`,
       [tahun]
@@ -38,7 +36,6 @@ router.get("/dashboard", async (req, res, next) => {
 
     const statistik = { populasi, sampel_min: sampelMin, total_responden: total, capaian };
 
-    // ── 3. Demografi ─────────────────────────────────────────────
     const [kelaminRows] = await pool.query(
       `SELECT jenis_kelamin AS label, COUNT(*) AS count
        FROM skmsurvey WHERE tahun = ? AND jenis_kelamin IS NOT NULL
@@ -63,7 +60,7 @@ router.get("/dashboard", async (req, res, next) => {
       [tahun]
     );
 
-    const KELAMIN_ALL   = ['Laki-laki', 'Perempuan'];
+    const KELAMIN_ALL    = ['Laki-laki', 'Perempuan'];
     const PENDIDIKAN_ALL = ['SD', 'SMP', 'SMA', 'Diploma', 'Sarjana', 'Magister', 'Doktoral'];
     const PEKERJAAN_ALL  = ['Pegawai Negeri', 'Swasta', 'Wiraswasta', 'Pelajar', 'Mahasiswa', 'Tidak Bekerja'];
 
@@ -117,6 +114,40 @@ router.post("/survey", async (req, res, next) => {
     res.json({ message: "Survey SKM berhasil disimpan" });
   } catch (err) {
     console.error("SKM create error:", err);
+    next(err);
+  }
+});
+
+// GET /api/skm/survey
+router.get("/survey", async (req, res, next) => {
+  try {
+    const { tahun, nama_layanan } = req.query;
+
+    let sql = `SELECT * FROM skmsurvey`;
+    const params = [];
+    const conditions = [];
+
+    if (tahun) {
+      conditions.push(`tahun = ?`);
+      params.push(tahun);
+    }
+
+    if (nama_layanan) {
+      conditions.push(`nama_layanan = ?`);
+      params.push(nama_layanan);
+    }
+
+    if (conditions.length > 0) {
+      sql += ` WHERE ` + conditions.join(" AND ");
+    }
+
+    sql += ` ORDER BY id DESC`;
+
+    const [rows] = await pool.query(sql, params);
+
+    res.json({ data: rows });
+  } catch (err) {
+    console.error("SKM survey get error:", err);
     next(err);
   }
 });
