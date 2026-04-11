@@ -102,33 +102,48 @@ const SkmPage = () => {
       <div className="max-w-[1800px] mx-auto px-6 py-8">
 
         {/* Header */}
+        
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-6 border-b-2 border-slate-200">
           <div>
+            
             <div className="flex items-center gap-2 text-sky-500 font-bold text-[10px] tracking-widest uppercase mb-1">
               <div className="w-6 h-[3px] bg-sky-500 rounded-full"></div> Laporan Survei Kepuasan Masyarakat
             </div>
+            
             <h1 className="text-3xl font-black tracking-tight italic text-slate-900">
               Hasil SKM — <span className="text-sky-500">{tahun}</span>
             </h1>
+            
           </div>
           <div className="flex items-center gap-4">
-            <div className="bg-white border-2 border-slate-200 rounded-xl px-4 py-2 flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase text-slate-400">Tahun</span>
-              <select
-                className="font-bold text-sm outline-none bg-transparent cursor-pointer"
-                value={tahun}
-                onChange={(e) => setTahun(e.target.value)}
-              >
-                {[2026, 2025, 2024].map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-            <button
-              onClick={() => navigate("/survei-layanan")}
-              className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-black transition-all flex items-center gap-2 shadow-lg"
-            >
-              <Plus size={18} /> Tambah Survey
-            </button>
-          </div>
+
+  {/* 🔙 Tombol Kembali */}
+  <button
+    onClick={() => navigate(-1)}
+    className="bg-slate-200 text-slate-700 px-4 py-3 rounded-xl font-bold text-sm hover:bg-slate-300 transition-all"
+  >
+    ← Kembali
+  </button>
+
+  <div className="bg-white border-2 border-slate-200 rounded-xl px-4 py-2 flex items-center gap-3">
+    <span className="text-[10px] font-black uppercase text-slate-400">Tahun</span>
+    <select
+      className="font-bold text-sm outline-none bg-transparent cursor-pointer"
+      value={tahun}
+      onChange={(e) => setTahun(e.target.value)}
+    >
+      {[2026, 2025, 2024].map(y => <option key={y} value={y}>{y}</option>)}
+    </select>
+  </div>
+
+  <button
+    onClick={() => navigate("/survei-layanan")}
+    className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-black transition-all flex items-center gap-2 shadow-lg"
+  >
+    <Plus size={18} /> Tambah Survey
+  </button>
+
+</div>
         </div>
 
         {loading ? (
