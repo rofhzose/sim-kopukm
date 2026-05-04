@@ -46,6 +46,8 @@ import userRoutes from "./routes/userRoutes.js";
 import rencanaAksiRoutes from "./routes/rencanaaksiRoutes.js";
 import pohonKinerjaRoutes from "./routes/pohonKinerjaRoutes.js";
 import bukuTamuRoutes from "./routes/bukuTamuRoutes.js";
+import skmSurveyRoutes from "./routes/skmSurvey.js";
+
 
 //RENSTRA
 import ProgramRoutes from "./routes/Renstra/ProgramRoutes.js";
@@ -221,6 +223,7 @@ app.use("/api/rencana-aksi", rencanaAksiRoutes);
 app.use("/api/pohon-kinerja", pohonKinerjaRoutes);
 app.use("/api/status-pegawai", statusPegawaiRoute);
 app.use("/api/buku-tamu", bukuTamuRoutes);
+app.use("/api/survey", skmSurveyRoutes);
 
 //RENSTRA
 app.use("/api/renstra/program", ProgramRoutes);
