@@ -90,8 +90,10 @@ if (!fs.existsSync(uploadsSotkDir)) fs.mkdirSync(uploadsSotkDir, { recursive: tr
 const allowedOrigins = [
   "https://clever-malasada-53b92b.netlify.app",
   "http://localhost:5173", // For Vite local dev
-  "http://localhost:3000", // For legacy local dev
-  "http://127.0.0.1:5173"
+  "http://localhost:3000",
+  "http://localhost:3001", // For legacy local dev
+  "http://127.0.0.1:5173",
+  "http://192.168.100.242:3001"
 ];
 
 // ================================
@@ -102,12 +104,12 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, postman, curl)
       if (!origin) return callback(null, true);
-      
+
       // Allow if origin is in the allowed list
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      
+
       console.warn("❌ Blocked CORS Origin:", origin);
       return callback(new Error("Not allowed by CORS"));
     },
@@ -173,7 +175,7 @@ app.use(
     res.setHeader("Access-Control-Allow-Origin", "*");
     try {
       res.removeHeader("X-Frame-Options");
-    } catch (e) {}
+    } catch (e) { }
     next();
   },
   express.static(uploadsDir, { index: false }),
@@ -293,7 +295,7 @@ const startServer = async () => {
   try {
     console.log("🔍 Checking database connection...");
     const conn = await pool.getConnection();
-    console.log("✅ MySQL Connected via DATABASE_URL!");
+    console.log("✅ MySQL Connected Successfully!");
     conn.release();
 
     server.listen(PORT, HOST, () => {
