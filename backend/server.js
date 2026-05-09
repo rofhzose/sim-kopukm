@@ -41,13 +41,11 @@ import masterRoutes from "./routes/masterRoutes.js";
 import userProfileRoutes from "./routes/userProfile.js";
 import { verifyToken } from "./middleware/authMiddleware.js";
 import statusPegawaiRoute from "./routes/statusPegawaiRoute.js";
-// tambahkan import ini
 import userRoutes from "./routes/userRoutes.js";
 import rencanaAksiRoutes from "./routes/rencanaaksiRoutes.js";
 import pohonKinerjaRoutes from "./routes/pohonKinerjaRoutes.js";
 import bukuTamuRoutes from "./routes/bukuTamuRoutes.js";
 import skmSurveyRoutes from "./routes/skmSurvey.js";
-
 
 //RENSTRA
 import ProgramRoutes from "./routes/Renstra/ProgramRoutes.js";
@@ -110,10 +108,6 @@ const allowedOrigins = [
   "http://192.168.1.6:3002",
   "http://192.168.1.6:4849",
   "http://localhost:3002",
-  "http://localhost:3002",
-
-
-  // ✅ Tambahkan ini:
   "http://192.168.1.5:3001",
   "http://192.168.1.5:3002",
   "http://192.168.1.8:3001",
@@ -126,7 +120,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // Postman, curl, mobile apps, server-to-server
+      if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -152,12 +146,11 @@ app.use(morgan("combined", { stream: accessLogStream }));
 app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: false, // disable for easier CSR + inline assets
+    contentSecurityPolicy: false,
     frameguard: false,
   }),
 );
 
-// ✅ ADD THIS — fix ERR_BLOCKED_BY_RESPONSE.NotSameOrigin for all file previews
 app.use((req, res, next) => {
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   next();
@@ -193,9 +186,6 @@ app.use(
 // ================================
 // 🔹 Static: serve uploads (accessible at /uploads/*)
 // ================================
-// pastikan uploadsDir sudah didefinisikan sebelum ini
-// contoh: const uploadsDir = path.join(process.cwd(), "uploads");
-
 app.use(
   "/uploads",
   (req, res, next) => {
@@ -215,6 +205,7 @@ app.use(
 app.get("/", (req, res) => {
   res.send("🚀 API KHFDZ Backend Aktif!");
 });
+
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/dashboard", koperasiRoute);
@@ -243,8 +234,8 @@ app.use("/api/dokumen/lke", dokumenLkeRoutes);
 app.use("/api/dokumen/dpa", dokumenDpaRoutes);
 app.use("/api/dokumen/kak", dokumenKakRoutes);
 app.use("/api/master", masterRoutes);
-app.use("/api/user", verifyToken, userProfileRoutes); // PUT /profile
-app.use("/api/user", verifyToken, userRoutes);        // GET /, GET /:id, POST /, PUT /:id, DELETE /:id
+app.use("/api/user", verifyToken, userProfileRoutes); 
+app.use("/api/user", verifyToken, userRoutes);        
 app.use("/api/rencana-aksi", rencanaAksiRoutes);
 app.use("/api/pohon-kinerja", pohonKinerjaRoutes);
 app.use("/api/status-pegawai", statusPegawaiRoute);
@@ -278,14 +269,10 @@ app.use((req, res, next) => {
 // ================================
 app.use((err, req, res, next) => {
   const status = err.status || 500;
-
   const logEntry = `[${new Date().toISOString()}] ${status} ${req.method} ${req.originalUrl} - ${err.message}\n`;
-
   fs.appendFileSync(path.join(logDir, "error.log"), logEntry);
-
   console.error("❌ ERROR:", logEntry);
 
-  // If CORS blocked origin, express-cors callback returns an Error (message: Not allowed by CORS)
   if (err.message && err.message.includes("Not allowed by CORS")) {
     return res.status(403).json({ status: "error", code: 403, message: err.message });
   }
