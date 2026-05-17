@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { CheckCircle2, Box, Printer, Camera, MapPin, Calendar, Tag } from "lucide-react";
+import { CheckCircle2, Box, Printer, Camera, MapPin, Calendar, Tag, DollarSign, Bookmark } from "lucide-react";
 import axiosInstance from "@/utils/axiosInstance";
 import moment from "moment";
 import "moment/locale/id";
+import formatIdr from "@/utils/formatIdr";
 
 export default function VerificationPage() {
   const { id } = useParams();
@@ -11,10 +12,15 @@ export default function VerificationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const isKibE = window.location.pathname.includes("/verifikasi-aset-e/");
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axiosInstance.get(`/kib-b/${id}`);
+        const endpoint = isKibE
+          ? `/kib-e/public/${id}`
+          : `/kib-b/public/${id}`;
+        const res = await axiosInstance.get(endpoint);
         setData(res.data);
       } catch (err) {
         setError(true);
@@ -23,7 +29,7 @@ export default function VerificationPage() {
       }
     };
     fetchData();
-  }, [id]);
+  }, [id, isKibE]);
 
   const handlePrint = () => {
     window.print();
@@ -53,7 +59,7 @@ export default function VerificationPage() {
   }
 
   const currentDate = moment().format("MMMM YYYY");
-  const scanTime = moment().format("DD MMM YYYY, HH:mm");
+  const scanTime = moment(isKibE && data.checked_at ? data.checked_at : undefined).format("DD MMM YYYY, HH:mm");
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4 font-sans flex justify-center items-start">
@@ -61,12 +67,14 @@ export default function VerificationPage() {
         
         {/* HEADER APP LIKE */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
-            <Box className="text-white" size={20} />
+          <div className={`w-10 h-10 ${isKibE ? 'bg-emerald-600 shadow-emerald-200' : 'bg-blue-600 shadow-blue-200'} rounded-xl flex items-center justify-center shadow-lg`}>
+            {isKibE ? <Bookmark className="text-white" size={20} /> : <Box className="text-white" size={20} />}
           </div>
           <div>
             <h1 className="text-lg font-black text-slate-800 leading-tight">Detail Barang</h1>
-            <p className="text-xs text-slate-500 font-medium">Kartu Inventaris Barang B</p>
+            <p className="text-xs text-slate-500 font-medium">
+              {isKibE ? "Kartu Inventaris Barang E" : "Kartu Inventaris Barang B"}
+            </p>
           </div>
         </div>
 
@@ -80,16 +88,21 @@ export default function VerificationPage() {
             <p className="text-emerald-600 text-xs font-medium mt-0.5">
               Status: <span className="font-bold">ADA</span> (Bulan {currentDate})
             </p>
+            {isKibE && (
+              <p className="text-[10px] text-emerald-500 font-bold mt-1 uppercase tracking-wider">
+                ✓ Otomatis masuk daftar ceklis
+              </p>
+            )}
           </div>
         </div>
 
         {/* MAIN CARD */}
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/60 overflow-hidden border border-slate-100 relative">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+          <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${isKibE ? 'from-emerald-500 via-teal-500 to-green-500' : 'from-blue-500 via-indigo-500 to-purple-500'}`}></div>
           
           <div className="p-8 pb-4 text-center border-b border-slate-50">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">KODE BARANG</p>
-            <h2 className="text-2xl font-black text-indigo-600 tracking-tight">{data.kode_barang}</h2>
+            <h2 className={`text-2xl font-black ${isKibE ? 'text-emerald-600' : 'text-indigo-600'} tracking-tight`}>{data.kode_barang}</h2>
           </div>
 
           <div className="p-8 space-y-6">
@@ -102,38 +115,86 @@ export default function VerificationPage() {
               <p className="text-lg font-bold text-slate-800">{data.nama_barang}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">MERK/TYPE</label>
-                <p className="text-sm font-bold text-slate-700 uppercase">{data.merk_type || "-"}</p>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-slate-400 mb-1">
-                  <Calendar size={14} />
-                  <label className="text-[10px] font-bold uppercase tracking-widest">TAHUN</label>
+            {isKibE ? (
+              <>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">REGISTER</label>
+                    <p className="text-sm font-bold text-slate-700 uppercase">{data.nomor_register || "-"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <Calendar size={14} />
+                      <label className="text-[10px] font-bold uppercase tracking-widest">TAHUN</label>
+                    </div>
+                    <p className="text-sm font-bold text-slate-700">{data.tahun_perolehan}</p>
+                  </div>
                 </div>
-                <p className="text-sm font-bold text-slate-700">{data.tahun_perolehan}</p>
-              </div>
-            </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">KONDISI</label>
-              <span className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide inline-block ${
-                data.kondisi === 'Baik' ? 'bg-emerald-100 text-emerald-700' :
-                data.kondisi === 'Rusak Ringan' ? 'bg-amber-100 text-amber-700' :
-                'bg-rose-100 text-rose-700'
-              }`}>
-                {data.kondisi}
-              </span>
-            </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">KONDISI</label>
+                    <span className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide inline-block ${
+                      data.kondisi === 'Baik' ? 'bg-emerald-100 text-emerald-700' :
+                      data.kondisi === 'Rusak Ringan' ? 'bg-amber-100 text-amber-700' :
+                      'bg-rose-100 text-rose-700'
+                    }`}>
+                      {data.kondisi}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <DollarSign size={14} />
+                      <label className="text-[10px] font-bold uppercase tracking-widest">HARGA</label>
+                    </div>
+                    <p className="text-sm font-bold text-emerald-600">{formatIdr(data.harga)}</p>
+                  </div>
+                </div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-slate-400 mb-1">
-                <MapPin size={14} />
-                <label className="text-[10px] font-bold uppercase tracking-widest">STATUS ASET</label>
-              </div>
-              <p className="text-sm font-bold text-slate-700">{data.status_aset || "Di Kantor"}</p>
-            </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-slate-400 mb-1">
+                    <MapPin size={14} />
+                    <label className="text-[10px] font-bold uppercase tracking-widest">STATUS ASET</label>
+                  </div>
+                  <p className="text-sm font-bold text-slate-700">{data.status || "ASET TETAP"}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">MERK/TYPE</label>
+                    <p className="text-sm font-bold text-slate-700 uppercase">{data.merk_type || "-"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <Calendar size={14} />
+                      <label className="text-[10px] font-bold uppercase tracking-widest">TAHUN</label>
+                    </div>
+                    <p className="text-sm font-bold text-slate-700">{data.tahun_perolehan}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">KONDISI</label>
+                  <span className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide inline-block ${
+                    data.kondisi === 'Baik' ? 'bg-emerald-100 text-emerald-700' :
+                    data.kondisi === 'Rusak Ringan' ? 'bg-amber-100 text-amber-700' :
+                    'bg-rose-100 text-rose-700'
+                  }`}>
+                    {data.kondisi}
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-slate-400 mb-1">
+                    <MapPin size={14} />
+                    <label className="text-[10px] font-bold uppercase tracking-widest">STATUS ASET</label>
+                  </div>
+                  <p className="text-sm font-bold text-slate-700">{data.status_aset || "Di Kantor"}</p>
+                </div>
+              </>
+            )}
 
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">KETERANGAN</label>
@@ -152,7 +213,10 @@ export default function VerificationPage() {
 
         {/* ACTIONS */}
         <div className="space-y-3 print:hidden">
-          <button onClick={() => window.location.href = '/dokumen/kib-b'} className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2">
+          <button 
+            onClick={() => window.location.href = isKibE ? '/dokumen/kib-e' : '/dokumen/kib-b'} 
+            className={`w-full py-4 ${isKibE ? 'bg-emerald-600 shadow-emerald-200 hover:bg-emerald-700' : 'bg-blue-600 shadow-blue-200 hover:bg-blue-700'} text-white rounded-2xl font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2`}
+          >
             <Camera size={20} />
             Scan Barang Lain
           </button>
@@ -171,3 +235,4 @@ export default function VerificationPage() {
     </div>
   );
 }
+

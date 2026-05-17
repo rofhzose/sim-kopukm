@@ -8,7 +8,7 @@ import axios from "axios";
 import FilePreviewModal from "@/LAYOUTS/FilePreviewModal";
 import { useNavigate } from "react-router-dom";
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://localhost:4849" });
 
 export default function RenjaPage() {
   const navigate = useNavigate();

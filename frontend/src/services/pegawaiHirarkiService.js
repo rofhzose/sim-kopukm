@@ -1,35 +1,18 @@
-import axios from "axios";
-
-/**
- * 🌐 Backend API URL for Pegawai Hirarki
- */
-const API_URL = `${import.meta.env.VITE_API_URL}/api/pegawai-hirarki`;
-
-/**
- * 🔑 Helper to attach JWT token
- */
-const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+import axiosInstance from "../utils/axiosInstance";
 
 /**
  * 📋 Get all hirarki relationships
  * Returns: id, id_pegawai, id_atasan, valid_dari, valid_sampai
  */
 export const getAllHirarki = async () => {
-  return axios.get(API_URL, getAuthHeader());
+  return axiosInstance.get('/pegawai-hirarki');
 };
 
 /**
  * 🔍 Get hirarki by ID
  */
 export const getHirarkiById = async (id) => {
-  return axios.get(`${API_URL}/${id}`, getAuthHeader());
+  return axiosInstance.get(`/pegawai-hirarki/${id}`);
 };
 
 /**
@@ -37,19 +20,19 @@ export const getHirarkiById = async (id) => {
  * Expects: { id_pegawai, id_atasan, valid_dari, valid_sampai }
  */
 export const createHirarki = async (hirarkiData) => {
-  return axios.post(API_URL, hirarkiData, getAuthHeader());
+  return axiosInstance.post('/pegawai-hirarki', hirarkiData);
 };
 
 /**
  * ✏️ Update hirarki
  */
 export const updateHirarki = async (id, hirarkiData) => {
-  return axios.put(`${API_URL}/${id}`, hirarkiData, getAuthHeader());
+  return axiosInstance.put(`/pegawai-hirarki/${id}`, hirarkiData);
 };
 
 /**
  * 🗑️ Delete hirarki
  */
 export const deleteHirarki = async (id) => {
-  return axios.delete(`${API_URL}/${id}`, getAuthHeader());
+  return axiosInstance.delete(`/pegawai-hirarki/${id}`);
 };

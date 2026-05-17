@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Filter, RefreshCw, Trash2, Edit3, Eye, Printer, Loader2, X } from "lucide-react";
+import { Plus, Search, Filter, RefreshCw, Trash2, Edit3, Eye, Printer, Loader2, X, ArrowLeft, List, ClipboardList, QrCode } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import axiosInstance from "@/utils/axiosInstance";
 import Swal from "sweetalert2";
@@ -16,6 +16,7 @@ export default function KibBPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedQr, setSelectedQr] = useState(null);
+  const [activeTab, setActiveTab] = useState("daftar"); // 'daftar' or 'ceklis'
   
   // Filter States
   const [filterKondisi, setFilterKondisi] = useState("");
@@ -59,6 +60,28 @@ export default function KibBPage() {
     });
   };
 
+  const handleResetChecklist = async () => {
+    Swal.fire({
+      title: "Reset Semua Ceklis?",
+      text: "Seluruh status ceklis KIB B akan dikembalikan ke Belum Dicek!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      confirmButtonText: "Ya, Reset!",
+      cancelButtonText: "Batal",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axiosInstance.post("/kib-b/reset-checklist");
+          Swal.fire("Berhasil!", "Status ceklis KIB B telah dikosongkan.", "success");
+          fetchData();
+        } catch (err) {
+          Swal.fire("Gagal!", "Gagal mereset status ceklis.", "error");
+        }
+      }
+    });
+  };
+
   const filteredData = data.filter(item => {
     const matchesSearch = 
       item.nama_barang?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -78,27 +101,72 @@ export default function KibBPage() {
   };
 
   const handleExportPDF = () => {
-    // Simpan data yang difilter ke localStorage agar bisa diambil di halaman print
-    localStorage.setItem("printData", JSON.stringify(filteredData));
-    
-    // Buka halaman print tabel di tab baru
-    window.open('/print-table-kib-b', '_blank');
+    if (activeTab === "ceklis") {
+      localStorage.setItem("printCeklisBData", JSON.stringify(filteredData));
+      window.open("/print-checklist-kib-b", "_blank");
+    } else {
+      localStorage.setItem("printData", JSON.stringify(filteredData));
+      window.open('/print-table-kib-b', '_blank');
+    }
+  };
+
+  const handleGoToScanB = () => {
+    window.location.href = "/hasilscanqrb";
   };
 
   return (
     <div className="flex flex-col h-full bg-slate-50 p-6 space-y-6">
       
+      {/* BACK BUTTON */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => (window.location.href = "/dokumen/inventaris")}
+          className="p-2 bg-white rounded-xl shadow-sm border border-slate-100 text-slate-600 hover:text-blue-600 transition-colors"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest">
+          Kembali ke Inventaris
+        </h2>
+      </div>
+
       {/* DASHBOARD */}
       <KibBDashboard 
         data={data} 
         onAdd={() => setShowAddModal(true)} 
-        onScan={() => {/* Implement Scan Logic if needed */}} 
+        onScan={handleGoToScanB} 
         onExportPDF={handleExportPDF}
       />
 
+      {/* TABS */}
+      <div className="flex gap-2 p-1 bg-slate-200/60 rounded-2xl w-fit self-start border border-slate-200">
+        <button
+          onClick={() => setActiveTab("daftar")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+            activeTab === "daftar"
+              ? "bg-white text-slate-800 shadow-sm"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <List size={16} />
+          Daftar Aset KIB B
+        </button>
+        <button
+          onClick={() => setActiveTab("ceklis")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+            activeTab === "ceklis"
+              ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <ClipboardList size={16} />
+          Tabel Ceklis Aset KIB B
+        </button>
+      </div>
+
       {/* TOOLBAR */}
       <div className="flex flex-col gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-4">
           <div className="flex items-center gap-3 w-full max-w-md bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
             <Search size={20} className="text-slate-400" />
             <input 
@@ -109,6 +177,15 @@ export default function KibBPage() {
             />
           </div>
           <div className="flex gap-2">
+            {activeTab === "ceklis" && (
+              <button
+                onClick={handleResetChecklist}
+                className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl font-bold text-sm hover:bg-rose-100 transition-colors border border-rose-100"
+                title="Reset Ceklis"
+              >
+                Reset Ceklis
+              </button>
+            )}
             <button onClick={fetchData} className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors" title="Refresh">
               <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
             </button>
@@ -172,97 +249,179 @@ export default function KibBPage() {
 
       {/* TABLE */}
       <div className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-        <div className="overflow-x-auto flex-1 custom-scrollbar">
-          <table className="w-full min-w-[1500px]">
-            <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider w-16">No</th>
-                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider w-40">Kode Barang</th>
-                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Nama Barang</th>
-                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Merk / Type</th>
-                <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-wider">Tahun</th>
-                <th className="px-6 py-4 text-right text-xs font-black text-slate-500 uppercase tracking-wider">Harga (Rp)</th>
-                <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-wider">Kondisi</th>
-                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Keterangan</th>
-                <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-wider">QR Code</th>
-                <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-wider sticky right-0 bg-slate-50 shadow-l">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
-                <tr>
-                  <td colSpan="10" className="p-12 text-center text-slate-400 font-medium">
-                    <Loader2 className="animate-spin mx-auto mb-2" />
-                    Memuat data...
-                  </td>
-                </tr>
-              ) : filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan="10" className="p-12 text-center text-slate-400 font-medium">
-                    Tidak ada data ditemukan.
-                  </td>
-                </tr>
-              ) : (
-                filteredData.map((item, index) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-6 py-4 text-sm font-bold text-slate-500">{index + 1}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-indigo-600 bg-indigo-50/30 rounded-r-xl">{item.kode_barang}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-700">{item.nama_barang}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-600">{item.merk_type}</td>
-                    <td className="px-6 py-4 text-center text-sm font-bold text-slate-500 bg-slate-50/50 rounded-lg">{item.tahun_perolehan}</td>
-                    <td className="px-6 py-4 text-right text-sm font-bold text-emerald-600">{Number(item.harga).toLocaleString("id-ID")}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide ${
-                        item.kondisi === 'Baik' ? 'bg-emerald-100 text-emerald-600' :
-                        item.kondisi === 'Rusak Ringan' ? 'bg-amber-100 text-amber-600' :
-                        'bg-rose-100 text-rose-600'
-                      }`}>
-                        {item.kondisi}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500 italic truncate max-w-xs">{item.keterangan || "-"}</td>
-                    <td className="px-6 py-4 text-center">
-                      <div 
-                        className="bg-white p-2 rounded-lg border border-slate-100 shadow-sm inline-block cursor-pointer hover:scale-110 transition-transform"
-                        onClick={() => setSelectedQr(item)}
-                      >
-                        <QRCodeCanvas
-                          value={`${window.location.origin}/verifikasi-aset/${item.id}`}
-                          size={64}
-                          level={"H"}
-                        />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 sticky right-0 bg-white shadow-l">
-                      <div className="flex items-center justify-center gap-2">
-                        <button 
-                          onClick={() => window.location.href = `/verifikasi-aset/${item.id}`}
-                          className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" 
-                          title="Detail Verifikasi"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <button 
-                          onClick={() => handleEdit(item)}
-                          className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition-colors" 
-                          title="Edit"
-                        >
-                          <Edit3 size={16} />
-                        </button>
-                        <button onClick={() => handleDelete(item.id)} className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors" title="Hapus">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+        {activeTab === "daftar" ? (
+          <>
+            <div className="overflow-x-auto flex-1 custom-scrollbar">
+              <table className="w-full min-w-[1500px]">
+                <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider w-16">No</th>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider w-40">Kode Barang</th>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Nama Barang</th>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Merk / Type</th>
+                    <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-wider">Tahun</th>
+                    <th className="px-6 py-4 text-right text-xs font-black text-slate-500 uppercase tracking-wider">Harga (Rp)</th>
+                    <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-wider">Kondisi</th>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Keterangan</th>
+                    <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-wider">QR Code</th>
+                    <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-wider sticky right-0 bg-slate-50 shadow-l">Aksi</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        <div className="p-4 border-t border-slate-100 bg-slate-50 text-xs text-slate-500 font-medium text-center">
-          Menampilkan {filteredData.length} data
-        </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {loading ? (
+                    <tr>
+                      <td colSpan="10" className="p-12 text-center text-slate-400 font-medium">
+                        <Loader2 className="animate-spin mx-auto mb-2" />
+                        Memuat data...
+                      </td>
+                    </tr>
+                  ) : filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan="10" className="p-12 text-center text-slate-400 font-medium">
+                        Tidak ada data ditemukan.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredData.map((item, index) => (
+                      <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="px-6 py-4 text-sm font-bold text-slate-500">{index + 1}</td>
+                        <td className="px-6 py-4 text-sm font-bold text-indigo-600 bg-indigo-50/30 rounded-r-xl">{item.kode_barang}</td>
+                        <td className="px-6 py-4 text-sm font-bold text-slate-700">{item.nama_barang}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-slate-600">{item.merk_type}</td>
+                        <td className="px-6 py-4 text-center text-sm font-bold text-slate-500 bg-slate-50/50 rounded-lg">{item.tahun_perolehan}</td>
+                        <td className="px-6 py-4 text-right text-sm font-bold text-emerald-600">{Number(item.harga).toLocaleString("id-ID")}</td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide ${
+                            item.kondisi === 'Baik' ? 'bg-emerald-100 text-emerald-600' :
+                            item.kondisi === 'Rusak Ringan' ? 'bg-amber-100 text-amber-600' :
+                            'bg-rose-100 text-rose-600'
+                          }`}>
+                            {item.kondisi}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500 italic truncate max-w-xs">{item.keterangan || "-"}</td>
+                        <td className="px-6 py-4 text-center">
+                          <div 
+                            className="bg-white p-2 rounded-lg border border-slate-100 shadow-sm inline-block cursor-pointer hover:scale-110 transition-transform"
+                            onClick={() => setSelectedQr(item)}
+                          >
+                            <QRCodeCanvas
+                              value={`${window.location.origin}/verifikasi-aset/${item.id}`}
+                              size={64}
+                              level={"H"}
+                            />
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 sticky right-0 bg-white shadow-l">
+                          <div className="flex items-center justify-center gap-2">
+                            <button 
+                              onClick={() => window.location.href = `/verifikasi-aset/${item.id}`}
+                              className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" 
+                              title="Detail Verifikasi"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleEdit(item)}
+                              className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition-colors" 
+                              title="Edit"
+                            >
+                              <Edit3 size={16} />
+                            </button>
+                            <button onClick={() => handleDelete(item.id)} className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors" title="Hapus">
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 text-xs text-slate-500 font-medium text-center">
+              Menampilkan {filteredData.length} data
+            </div>
+          </>
+        ) : (
+          <>
+            {/* CHECKLIST TABLE */}
+            <div className="overflow-x-auto flex-1 custom-scrollbar">
+              <table className="w-full min-w-[1200px]">
+                <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">No</th>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Kode</th>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Nama Barang</th>
+                    <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-wider">Aksi</th>
+                    <th className="px-6 py-4 text-center text-xs font-black text-slate-500 uppercase tracking-wider">Waktu Cek</th>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {loading ? (
+                    <tr>
+                      <td colSpan="6" className="p-12 text-center text-slate-400 font-medium">
+                        <Loader2 className="animate-spin mx-auto mb-2" />
+                        Memuat data...
+                      </td>
+                    </tr>
+                  ) : filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="p-12 text-center text-slate-400 font-medium">
+                        Tidak ada data ditemukan.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredData.map((item, index) => (
+                      <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="px-6 py-4 text-sm font-bold text-slate-400">{index + 1}</td>
+                        <td className="px-6 py-4 text-sm font-bold text-indigo-600">{item.kode_barang}</td>
+                        <td className="px-6 py-4 text-sm font-bold text-slate-700">
+                          <div>{item.nama_barang}</div>
+                          <div className="text-[10px] text-slate-400 font-medium">Reg: {item.nomor_register || "-"}</div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button 
+                              onClick={() => setSelectedQr(item)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors"
+                            >
+                              <QrCode size={14} /> Pindai QR
+                            </button>
+                            <button 
+                              onClick={() => window.location.href = `/verifikasi-aset/${item.id}`}
+                              className="p-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                            >
+                              <Eye size={14} />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center text-sm font-bold text-slate-500">
+                          {item.is_checked && item.checked_at
+                            ? new Date(item.checked_at).toLocaleString("id-ID", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              }) + " WIB"
+                            : "-"}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-black text-emerald-600">
+                          {item.is_checked ? "✓ BARANG ADA" : ""}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 text-xs text-slate-500 font-medium text-center">
+              Menampilkan {filteredData.length} data ceklis
+            </div>
+          </>
+        )}
       </div>
 
       <AddKibBModal open={showAddModal} onClose={() => setShowAddModal(false)} onSuccess={fetchData} />
@@ -291,7 +450,7 @@ export default function KibBPage() {
               <X size={20} />
             </button>
 
-            <h3 className="text-xl font-black text-slate-800 mb-2">Kode QR Barang</h3>
+            <h3 className="text-xl font-black text-slate-800 mb-2">Kode QR Barang KIB B</h3>
             <p className="text-sm text-slate-500 font-medium mb-6">{selectedQr.nama_barang}</p>
 
             <div className="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-inner inline-block mb-6">

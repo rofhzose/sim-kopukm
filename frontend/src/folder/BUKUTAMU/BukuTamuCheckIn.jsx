@@ -1,17 +1,26 @@
 import React, { useState } from "react";
 import { 
   Users, UserCheck, Phone, Building, Briefcase, 
-  Calendar, MapPin, Save, ArrowLeft, ClipboardList, CheckCircle2
+  Calendar, MapPin, Save, ClipboardList, CheckCircle2
 } from "lucide-react";
 import axiosInstance from "@/utils/axiosInstance";
 import Swal from "sweetalert2";
 
 export default function BukuTamuCheckIn() {
-  const [form, setForm] = useState({
-    nama_tamu: "", instansi: "", jabatan: "", kontak: "", 
-    kegiatan: "", keperluan: "", lokasi: "Dinas Koperasi dan UKM", 
-    kategori: "Tamu Umum", metode: "QR"
-  });
+  // State awal untuk reset
+  const initialForm = {
+    nama_tamu: "", 
+    instansi: "", 
+    jabatan: "", 
+    kontak: "", 
+    kegiatan: "", 
+    keperluan: "", 
+    lokasi: "Dinas Koperasi dan UKM", 
+    kategori: "Tamu Umum", 
+    metode: "QR"
+  };
+
+  const [form, setForm] = useState(initialForm);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +28,9 @@ export default function BukuTamuCheckIn() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Mengirim data ke backend
       await axiosInstance.post("/buku-tamu", form);
+      
       setSubmitted(true);
       Swal.fire({
         title: "Berhasil!",
@@ -28,10 +39,18 @@ export default function BukuTamuCheckIn() {
         confirmButtonColor: "#10b981"
       });
     } catch (err) {
-      Swal.fire("Gagal", "Terjadi kesalahan saat menyimpan data", "error");
+      // Menangani error dari backend (seperti error 500 tadi)
+      const errorMsg = err.response?.data?.message || "Terjadi kesalahan saat menyimpan data";
+      Swal.fire("Gagal", errorMsg, "error");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fungsi untuk reset agar bisa isi lagi
+  const handleIsiLagi = () => {
+    setForm(initialForm); // Kembalikan form ke kosong
+    setSubmitted(false);  // Kembali ke tampilan form
   };
 
   if (submitted) {
@@ -47,7 +66,7 @@ export default function BukuTamuCheckIn() {
           </div>
           <div className="pt-4">
             <button 
-              onClick={() => setSubmitted(false)}
+              onClick={handleIsiLagi}
               className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-lg shadow-emerald-200 transition-all uppercase tracking-widest text-sm"
             >
               Isi Lagi
@@ -155,7 +174,6 @@ export default function BukuTamuCheckIn() {
           </form>
         </div>
 
-        {/* FOOTER */}
         <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
           Dinas Koperasi dan UKM &copy; {new Date().getFullYear()}
         </p>

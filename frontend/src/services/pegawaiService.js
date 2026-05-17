@@ -1,15 +1,4 @@
-import axios from "axios";
-
-const API_URL = `${import.meta.env.VITE_API_URL}/api/pegawai`;
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+import axiosInstance from "../utils/axiosInstance";
 
 /**
  * 📋 Get all pegawai (returns ARRAY)
@@ -17,7 +6,7 @@ const getAuthHeader = () => {
  */
 export const getPegawai = async () => {
   // ✅ IMPORTANT: Call without ID to get all pegawai
-  return axios.get(API_URL, getAuthHeader());
+  return axiosInstance.get('/pegawai');
   // This calls: GET /api/pegawai (not /api/pegawai/something)
 };
 
@@ -25,26 +14,26 @@ export const getPegawai = async () => {
  * 🔍 Get single pegawai by ID (returns SINGLE OBJECT)
  */
 export const getPegawaiById = async (id) => {
-  return axios.get(`${API_URL}/${id}`, getAuthHeader());
+  return axiosInstance.get(`/pegawai/${id}`);
 };
 
 /**
  * ➕ Create new pegawai
  */
 export const createPegawai = async (pegawaiData) => {
-  return axios.post(API_URL, pegawaiData, getAuthHeader());
+  return axiosInstance.post('/pegawai', pegawaiData);
 };
 
 /**
  * ✏️ Update pegawai
  */
 export const updatePegawai = async (id, pegawaiData) => {
-  return axios.put(`${API_URL}/${id}`, pegawaiData, getAuthHeader());
+  return axiosInstance.put(`/pegawai/${id}`, pegawaiData);
 };
 
 /**
  * 🗑️ Delete pegawai
  */
 export const deletePegawai = async (id) => {
-  return axios.delete(`${API_URL}/${id}`, getAuthHeader());
+  return axiosInstance.delete(`/pegawai/${id}`);
 };

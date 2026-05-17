@@ -97,3 +97,46 @@ export async function remove(req, res, next) {
     next(err);
   }
 }
+
+// GET BY ID (PUBLIC + AUTO CHECKLIST)
+export async function getPublicById(req, res, next) {
+  try {
+    const { id } = req.params;
+    
+    // First, verify that the item exists
+    const [rows] = await pool.query("SELECT * FROM kib_e WHERE id = ?", [id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Data tidak ditemukan" });
+    }
+    
+    // Auto check the item
+    await pool.query(
+      "UPDATE kib_e SET is_checked = 1, checked_at = NOW() WHERE id = ?",
+      [id]
+    );
+    
+    // Fetch the updated item to return to frontend
+    const [updatedRows] = await pool.query("SELECT * FROM kib_e WHERE id = ?", [id]);
+    
+    res.json(updatedRows[0]);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// RESET CHECKLIST (ADMIN ONLY)
+export async function resetChecklist(req, res, next) {
+  try {
+    const query = "UPDATE kib_e SET is_checked = 0, checked_at = NULL";
+    await pool.query(query);
+    
+    res.json({
+      success: true,
+      message: "Berhasil meriset semua status ceklis KIB E",
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+

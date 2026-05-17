@@ -15,7 +15,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import FilePreviewModal from "@/LAYOUTS/FilePreviewModal";
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://localhost:4849" });
 
 export default function SopPage() {
   const navigate = useNavigate();

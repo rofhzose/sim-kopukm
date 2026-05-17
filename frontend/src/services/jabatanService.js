@@ -1,20 +1,13 @@
-import axios from "axios";
-
-const API_URL = `${import.meta.env.VITE_API_URL}/api/jabatan`;
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
-  return { headers: { Authorization: `Bearer ${token}` } };
-};
+import axiosInstance from "../utils/axiosInstance";
 
 export const getAllJabatan = async () => {
-  return axios.get(API_URL, getAuthHeader());
+  return axiosInstance.get('/jabatan');
 };
 
 // Sorted by kelas_jabatan (ganti dari level)
 export const getJabatanSortedByKelas = async () => {
   try {
-    const response = await axios.get(API_URL, getAuthHeader());
+    const response = await axiosInstance.get('/jabatan');
     if (response?.data?.data) {
       const KELAS_ORDER = ["1","2","3","5","6","7","8","9","11","12","14","IX"];
       const sorted = response.data.data.slice().sort((a, b) => {
@@ -35,25 +28,25 @@ export const getJabatanSortedByKelas = async () => {
 export const getJabatanSortedByLevel = getJabatanSortedByKelas;
 
 export const getJabatanById = async (id) => {
-  return axios.get(`${API_URL}/${id}`, getAuthHeader());
+  return axiosInstance.get(`/jabatan/${id}`);
 };
 
 export const createJabatan = async (data) => {
-  return axios.post(API_URL, data, getAuthHeader());
+  return axiosInstance.post('/jabatan', data);
 };
 
 export const updateJabatan = async (id, data) => {
-  return axios.put(`${API_URL}/${id}`, data, getAuthHeader());
+  return axiosInstance.put(`/jabatan/${id}`, data);
 };
 
 export const deleteJabatan = async (id) => {
-  return axios.delete(`${API_URL}/${id}`, getAuthHeader());
+  return axiosInstance.delete(`/jabatan/${id}`);
 };
 
 // Filter jabatan berdasarkan kelas_jabatan
 export const getJabatanByKelas = async (kelas) => {
   try {
-    const response = await axios.get(API_URL, getAuthHeader());
+    const response = await axiosInstance.get('/jabatan');
     if (response?.data?.data) {
       const filtered = response.data.data.filter(
         (j) => String(j.kelas_jabatan) === String(kelas)

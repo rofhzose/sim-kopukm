@@ -41,13 +41,11 @@ import masterRoutes from "./routes/masterRoutes.js";
 import userProfileRoutes from "./routes/userProfile.js";
 import { verifyToken } from "./middleware/authMiddleware.js";
 import statusPegawaiRoute from "./routes/statusPegawaiRoute.js";
-// tambahkan import ini
 import userRoutes from "./routes/userRoutes.js";
 import rencanaAksiRoutes from "./routes/rencanaaksiRoutes.js";
 import pohonKinerjaRoutes from "./routes/pohonKinerjaRoutes.js";
 import bukuTamuRoutes from "./routes/bukuTamuRoutes.js";
 import skmSurveyRoutes from "./routes/skmSurvey.js";
-
 
 //RENSTRA
 import ProgramRoutes from "./routes/Renstra/ProgramRoutes.js";
@@ -90,12 +88,32 @@ if (!fs.existsSync(uploadsSotkDir)) fs.mkdirSync(uploadsSotkDir, { recursive: tr
 // 🔹 Allowed Origins (FIXED)
 // ================================
 const allowedOrigins = [
-  "https://clever-malasada-53b92b.netlify.app",
-  "http://localhost:5173", // For Vite local dev
+  "https://himavera.my.id",
+  "http://himavera.my.id",
+  "https://api.himavera.my.id",
+  "https://www.himavera.my.id",
+  "http://www.himavera.my.id",
+  "http://72.61.208.1",
+  "http://72.61.208.1:4849",
+  "http://72.61.208.1:3000",
+  "http://72.61.208.1:3001",
   "http://localhost:3000",
-  "http://localhost:3001", // For legacy local dev
-  "http://127.0.0.1:5173",
-  "http://192.168.100.242:3001"
+  "http://127.0.0.1:3000",
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
+  "http://127.0.0.1:4849",
+  "http://192.168.1.9:3002",
+  "http://72.61.208.1:3002",
+  "http://192.168.1.9:4849",
+  "http://192.168.1.6:3002",
+  "http://192.168.1.6:4849",
+  "http://localhost:3002",
+  "http://192.168.1.5:3001",
+  "http://192.168.1.5:3002",
+  "http://192.168.1.8:3001",
+  "http://192.168.1.8:4849",
+  "http://192.168.1.12:3001",
+  "http://192.168.1.7:3001",
 ];
 
 // ================================
@@ -104,23 +122,23 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, postman, curl)
       if (!origin) return callback(null, true);
 
-      // Allow if origin is in the allowed list
-      if (allowedOrigins.includes(origin)) {
+      // Allow localhost, 127.0.0.1, and private local network IPs (e.g. 192.168.x.x, 10.x.x.x, etc.)
+      const isLocalhost = origin.includes("localhost") || origin.includes("127.0.0.1");
+      const isLocalIP = /^http(s)?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin);
+
+      if (allowedOrigins.includes(origin) || isLocalhost || isLocalIP) {
         return callback(null, true);
       }
-
       console.warn("❌ Blocked CORS Origin:", origin);
       return callback(new Error("Not allowed by CORS"));
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
-  })
+  }),
 );
-app.options("*", cors()); // Explicitly handle preflight requests
 
 // ================================
 // 🔹 Middleware umum
@@ -135,12 +153,11 @@ app.use(morgan("combined", { stream: accessLogStream }));
 app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: false, // disable for easier CSR + inline assets
+    contentSecurityPolicy: false,
     frameguard: false,
   }),
 );
 
-// ✅ ADD THIS — fix ERR_BLOCKED_BY_RESPONSE.NotSameOrigin for all file previews
 app.use((req, res, next) => {
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   next();
@@ -161,15 +178,21 @@ app.use(
 );
 
 // ================================
-// 🔹 Tes koneksi database dipindahkan ke bawah (startServer)
+// 🔹 Tes koneksi database
 // ================================
+(async () => {
+  try {
+    const conn = await pool.getConnection();
+    console.log("✅ MySQL Connected!");
+    conn.release();
+  } catch (err) {
+    console.error("❌ Database Error:", err.message);
+  }
+})();
 
 // ================================
 // 🔹 Static: serve uploads (accessible at /uploads/*)
 // ================================
-// pastikan uploadsDir sudah didefinisikan sebelum ini
-// contoh: const uploadsDir = path.join(process.cwd(), "uploads");
-
 app.use(
   "/uploads",
   (req, res, next) => {
@@ -189,6 +212,7 @@ app.use(
 app.get("/", (req, res) => {
   res.send("🚀 API KHFDZ Backend Aktif!");
 });
+
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/dashboard", koperasiRoute);
@@ -217,8 +241,8 @@ app.use("/api/dokumen/lke", dokumenLkeRoutes);
 app.use("/api/dokumen/dpa", dokumenDpaRoutes);
 app.use("/api/dokumen/kak", dokumenKakRoutes);
 app.use("/api/master", masterRoutes);
-app.use("/api/user", verifyToken, userProfileRoutes); // PUT /profile
-app.use("/api/user", verifyToken, userRoutes);        // GET /, GET /:id, POST /, PUT /:id, DELETE /:id
+app.use("/api/user", verifyToken, userProfileRoutes);
+app.use("/api/user", verifyToken, userRoutes);
 app.use("/api/rencana-aksi", rencanaAksiRoutes);
 app.use("/api/pohon-kinerja", pohonKinerjaRoutes);
 app.use("/api/status-pegawai", statusPegawaiRoute);
@@ -252,14 +276,10 @@ app.use((req, res, next) => {
 // ================================
 app.use((err, req, res, next) => {
   const status = err.status || 500;
-
   const logEntry = `[${new Date().toISOString()}] ${status} ${req.method} ${req.originalUrl} - ${err.message}\n`;
-
   fs.appendFileSync(path.join(logDir, "error.log"), logEntry);
-
   console.error("❌ ERROR:", logEntry);
 
-  // If CORS blocked origin, express-cors callback returns an Error (message: Not allowed by CORS)
   if (err.message && err.message.includes("Not allowed by CORS")) {
     return res.status(403).json({ status: "error", code: 403, message: err.message });
   }
@@ -292,31 +312,8 @@ io.on("connection", (socket) => {
 // ================================
 // 🔹 Jalankan server
 // ================================
-const HOST = "0.0.0.0";
+const HOST = process.env.HOST || "0.0.0.0";
 
-const startServer = async () => {
-  try {
-    console.log("🔍 Checking database connection...");
-    const conn = await pool.getConnection();
-    console.log("✅ MySQL Connected Successfully!");
-    conn.release();
-
-    server.listen(PORT, HOST, () => {
-      console.log(`🚀 Server running on http://${HOST}:${PORT}`);
-    });
-  } catch (err) {
-    console.error("❌ Database Connection Failed on Startup:");
-    console.error(`Message: ${err.message}`);
-    console.error(`Code: ${err.code}`);
-    process.exit(1);
-  }
-};
-
-startServer();
-
-// Graceful shutdown on unhandled rejections
-process.on("unhandledRejection", (err) => {
-  console.error("❌ Unhandled Rejection:", err);
-  setTimeout(() => process.exit(1), 3000).unref();
-  server.close(() => process.exit(1));
+server.listen(PORT, HOST, () => {
+  console.log(`🚀 Server running on http://${HOST}:${PORT}`);
 });

@@ -185,7 +185,7 @@ export default function DaftarUser() {
       setIsLoading(true);
       setError(null);
       const token = localStorage.getItem("token");
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:4849"}/api/user`, {
         method: "GET",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       });
@@ -234,7 +234,7 @@ export default function DaftarUser() {
     if (!window.confirm("Apakah Anda yakin ingin menghapus pengguna ini?")) return;
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:4849"}/api/user/${id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       });

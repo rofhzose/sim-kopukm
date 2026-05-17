@@ -1,11 +1,26 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { FileText, PencilLine, Trash2, Plus, AlertCircle, ArrowLeft, Eye, UploadCloud, CheckCircle } from "lucide-react";
+import { 
+  FileText, 
+  PencilLine, 
+  Trash2, 
+  Plus, 
+  AlertCircle, 
+  ArrowLeft, 
+  Eye, 
+  UploadCloud, 
+  CheckCircle,
+  RotateCw,
+  FlipHorizontal,
+  RefreshCw,
+  ZoomIn,
+  ZoomOut
+} from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/utils/axiosInstance";
 import FilePreviewModal from "@/LAYOUTS/FilePreviewModal";
 
-const api = axiosInstance || axios.create({ baseURL: import.meta.env.VITE_API_URL });
+const api = axiosInstance || axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://localhost:4849" });
 
 export default function SotkPage() {
   const navigate = useNavigate();
@@ -19,6 +34,11 @@ export default function SotkPage() {
   const [uploadingName, setUploadingName] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
+
+  // States for interactive organizational structure image viewer (flip, rotate, zoom)
+  const [rotation, setRotation] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [scale, setScale] = useState(1);
 
   const prefixHasApi = !!(api.defaults?.baseURL?.includes("/api"));
   const endpoints = {
@@ -184,14 +204,80 @@ export default function SotkPage() {
                   </h2>
                   <p className="text-gray-500 text-xs mt-1 pl-1">Peraturan Bupati Karawang Nomor 68 Tahun 2021</p>
                 </div>
-                <span className="text-xs text-gray-400 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg">Klik untuk memperbesar</span>
+                <span className="text-xs text-gray-400 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg">Gunakan panel kontrol di bawah untuk memutar / zoom bagan</span>
               </div>
-              <button
-                onClick={handlePreviewOrgChart}
-                className="w-full rounded-xl overflow-hidden border border-blue-200/70 bg-white/60 hover:bg-white/80 hover:border-blue-300 transition-all duration-200 shadow-sm"
-              >
-                <img src={ORG_IMAGE_PATH} alt="Struktur Organisasi" className="w-full max-h-[500px] object-contain hover:scale-[1.01] transition-transform duration-300" />
-              </button>
+
+              {/* PANEL KONTROL INTERAKTIF (FLIP, ROTASI, ZOOM) */}
+              <div className="flex flex-wrap justify-between items-center gap-3 mb-4 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100/70 print:hidden">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRotation(r => (r + 90) % 360)}
+                    className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                    title="Putar Bagan 90 Derajat Kanan"
+                  >
+                    <RotateCw size={14} /> Rotasi 90°
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsFlipped(f => !f)}
+                    className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                    title="Cerminkan Bagan Horizontal"
+                  >
+                    <FlipHorizontal size={14} /> Cermin (Flip)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScale(s => Math.min(s + 0.25, 3.0))}
+                    className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                    title="Perbesar Bagan (Zoom In)"
+                  >
+                    <ZoomIn size={14} /> Zoom In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScale(s => Math.max(s - 0.25, 0.5))}
+                    className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                    title="Perkecil Bagan (Zoom Out)"
+                  >
+                    <ZoomOut size={14} /> Zoom Out
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setRotation(0); setIsFlipped(false); setScale(1); }}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
+                    title="Reset Posisi Awal"
+                  >
+                    <RefreshCw size={14} /> Reset View
+                  </button>
+                </div>
+                <div className="text-[10px] text-slate-500 font-bold flex gap-3">
+                  <span>Rotasi: {rotation}°</span>
+                  <span>Zoom: {Math.round(scale * 100)}%</span>
+                  <span>Flip: {isFlipped ? "Ya" : "Tidak"}</span>
+                </div>
+              </div>
+
+              {/* CONTAINER GAMBAR INTERAKTIF DENGAN SCROLL & TRANSFORMS */}
+              <div className="w-full rounded-xl overflow-auto border border-blue-200/70 bg-slate-100/50 p-6 flex items-center justify-center min-h-[350px] relative group">
+                <button
+                  type="button"
+                  onClick={handlePreviewOrgChart}
+                  className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-slate-900 shadow-sm transition-all duration-200 shrink-0 z-10 flex items-center gap-1 text-[11px] font-bold"
+                  title="Perbesar Penuh Modal"
+                >
+                  <Eye size={14} /> Layar Penuh
+                </button>
+                <img
+                  src={ORG_IMAGE_PATH}
+                  alt="Struktur Organisasi"
+                  className="max-w-full max-h-[500px] object-contain transition-all duration-300"
+                  style={{
+                    transform: `rotate(${rotation}deg) scaleX(${isFlipped ? -1 : 1}) scale(${scale})`,
+                    transformOrigin: "center center"
+                  }}
+                />
+              </div>
             </div>
           </div>
 

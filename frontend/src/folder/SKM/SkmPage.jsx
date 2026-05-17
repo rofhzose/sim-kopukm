@@ -2,9 +2,10 @@ import React, { useEffect, useState, useCallback } from "react";
 import {
   Users, Activity, ClipboardList, Info,
   Trophy, AlertTriangle, ChevronDown, ChevronUp, Plus,
-  BarChart3, Layers, GraduationCap, Briefcase, UserCircle, Loader2
+  BarChart3, Layers, GraduationCap, Briefcase, UserCircle, Loader2, QrCode, X
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { QRCodeCanvas } from "qrcode.react";
 import axiosInstance from "../../utils/axiosInstance";
 
 const colorPalette = [
@@ -39,6 +40,7 @@ const SkmPage = () => {
   const [data, setData] = useState({ layanan: [], statistik: {}, demografi: [] });
   const [loading, setLoading] = useState(true);
   const [openDetail, setOpenDetail] = useState(null);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const fetchSkmData = useCallback(async () => {
     try {
@@ -135,6 +137,13 @@ const SkmPage = () => {
       {[2026, 2025, 2024].map(y => <option key={y} value={y}>{y}</option>)}
     </select>
   </div>
+
+  <button
+    onClick={() => setShowQrModal(true)}
+    className="bg-blue-100 text-blue-600 px-4 py-3 rounded-xl font-bold text-sm hover:bg-blue-200 transition-all flex items-center gap-2"
+  >
+    <QrCode size={18} /> QR Code
+  </button>
 
   <button
     onClick={() => navigate("/survei-layanan")}
@@ -355,6 +364,41 @@ const SkmPage = () => {
           </>
         )}
       </div>
+
+      {showQrModal && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-300"
+          onClick={() => setShowQrModal(false)}
+        >
+          <div 
+            className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-300 relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setShowQrModal(false)}
+              className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <h3 className="text-xl font-black text-slate-800 mb-2">QR Code Survei SKM</h3>
+            <p className="text-sm text-slate-500 font-medium mb-6">Scan QR ini untuk mengisi survei layanan.</p>
+
+            <div className="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-inner inline-block mb-6">
+              <QRCodeCanvas
+                value={`${window.location.origin}/survei-layanan`}
+                size={250}
+                level={"H"}
+                includeMargin={true}
+              />
+            </div>
+            
+            <p className="text-xs text-slate-400 mt-2">
+              Silakan arahkan kamera HP Anda ke QR Code.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

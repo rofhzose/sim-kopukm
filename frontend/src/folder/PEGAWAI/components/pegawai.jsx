@@ -17,6 +17,7 @@ export default function DaftarPegawai() {
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [isWarningCollapsed, setIsWarningCollapsed] = useState(false);
 
   const fetchPegawai = async () => {
     try {
@@ -41,7 +42,7 @@ export default function DaftarPegawai() {
     const semuaId = new Set(pegawai.map((p) => String(p.id_pegawai)));
 
     pegawai.forEach((p) => {
-      const noAtasan = p.id_atasan === null || p.id_atasan === undefined || String(p.id_atasan) === "0" || !semuaId.has(String(p.id_atasan)); // atasan tidak ada di dataset = root
+      const noAtasan = p.id_atasan === null || p.id_atasan === undefined || String(p.id_atasan) === "0" || !semuaId.has(String(p.id_atasan)); 
 
       const parentId = noAtasan ? "root" : String(p.id_atasan);
       if (!map[parentId]) map[parentId] = [];
@@ -55,10 +56,7 @@ export default function DaftarPegawai() {
     const roots = childrenMap["root"] || [];
     if (roots.length <= 1) return [];
 
-    // Cari kelas numerik tertinggi di antara semua root
     const maxKelasNum = Math.max(...roots.map((p) => kelasToNum(p.kelas_pegawai)));
-
-    // Warning: root yang kelas_pegawainya BUKAN yang tertinggi
     return roots.filter((p) => kelasToNum(p.kelas_pegawai) < maxKelasNum);
   }, [childrenMap]);
 
@@ -118,14 +116,12 @@ export default function DaftarPegawai() {
             animation-delay: ${depth * 0.05 + index * 0.03}s;
           }
         `}</style>
-
         <div className="pegawai-card mb-2.5">
           <div className="relative overflow-hidden rounded-2xl border border-blue-200/70 bg-linear-to-br from-white/80 to-blue-50/70 backdrop-blur-sm shadow-md hover:shadow-lg hover:border-blue-300 transition-all duration-200 group">
             <div className={`absolute -top-16 -right-16 w-40 h-40 rounded-full opacity-15 blur-2xl bg-linear-to-br ${getAvatarColor(index)}`} />
 
             <div className="relative p-4 sm:p-5">
               <div className="flex items-center justify-between gap-4">
-                {/* Left */}
                 <div className="flex items-center gap-3 min-w-0">
                   {children.length > 0 ? (
                     <button onClick={() => toggleExpand(item.id_pegawai)} className="shrink-0 p-2 rounded-lg bg-blue-100 hover:bg-blue-200 transition-all duration-200 text-blue-600">
@@ -167,7 +163,6 @@ export default function DaftarPegawai() {
                   </div>
                 </div>
 
-                {/* Right */}
                 <div className="flex items-center gap-2 shrink-0">
                   {item.kelas_jabatan || item.kelas_pegawai ? <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">Kelas {item.kelas_jabatan || item.kelas_pegawai}</span> : null}
                   <button onClick={() => navigate(`/dokumen/pegawai/edit/${item.id_pegawai}`)} className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 transition-all duration-200 text-blue-600 hover:text-blue-800" title="Edit">
@@ -188,6 +183,8 @@ export default function DaftarPegawai() {
   };
 
   const roots = childrenMap["root"] || [];
+  const tanpaAtasanIds = new Set(pegawaiTanpaAtasan.map((p) => String(p.id_pegawai)));
+  const rootsValid = roots.filter((p) => !tanpaAtasanIds.has(String(p.id_pegawai)));
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100 text-gray-900 overflow-x-hidden">
@@ -200,34 +197,68 @@ export default function DaftarPegawai() {
         {/* Header */}
         <header className="backdrop-blur-xl bg-white/40 border-b border-blue-200/50 sticky top-0 z-20 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-linear-to-br from-blue-500 to-cyan-400 shadow-md shadow-blue-500/30">
-                    <GitGraph size={20} className="text-white" />
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-linear-to-br from-blue-500 to-cyan-400 shadow-md shadow-blue-500/30">
+                      <GitGraph size={20} className="text-white" />
+                    </div>
+                    <h1 className="text-4xl font-bold bg-linear-to-r from-blue-700 via-blue-600 to-cyan-600 bg-clip-text text-transparent">Struktur Tim</h1>
                   </div>
-                  <h1 className="text-4xl font-bold bg-linear-to-r from-blue-700 via-blue-600 to-cyan-600 bg-clip-text text-transparent">Struktur Tim</h1>
+                  <p className="text-gray-600 text-sm pl-1">Kelola hierarki organisasi dan data pegawai dengan mudah</p>
                 </div>
-                <p className="text-gray-600 text-sm pl-1">Kelola hierarki organisasi dan data pegawai dengan mudah</p>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => navigate(-1)} className="px-4 py-2.5 rounded-lg bg-white/60 hover:bg-white/80 border border-blue-200 text-gray-700 font-medium text-sm transition-all duration-200 flex items-center gap-2">
+                    <ArrowLeft size={16} />
+                    <span className="hidden sm:inline">Kembali</span>
+                  </button>
+                  <button
+                    onClick={() => navigate("/dokumen/pegawai/tambah-pegawai")}
+                    className="px-4 py-2.5 rounded-lg bg-linear-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 font-bold text-sm transition-all duration-200 shadow-lg shadow-blue-500/30 flex items-center gap-2 text-white"
+                  >
+                    <UserPlus size={16} />
+                    <span className="hidden sm:inline">Pegawai Baru</span>
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <button onClick={() => navigate(-1)} className="px-4 py-2.5 rounded-lg bg-white/60 hover:bg-white/80 border border-blue-200 text-gray-700 font-medium text-sm transition-all duration-200 flex items-center gap-2">
-                  <ArrowLeft size={16} />
-                  <span className="hidden sm:inline">Kembali</span>
-                </button>
-                <button
-                  onClick={() => navigate("/dokumen/pegawai/tambah-pegawai")}
-                  className="px-4 py-2.5 rounded-lg bg-linear-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 font-bold text-sm transition-all duration-200 shadow-lg shadow-blue-500/30 flex items-center gap-2 text-white"
-                >
-                  <UserPlus size={16} />
-                  <span className="hidden sm:inline">Pegawai Baru</span>
-                </button>
+
+              {/* Stats Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { label: "Total Pegawai", value: pegawai.length, icon: Users },
+                  { label: "Jumlah Cabang", value: roots.length, icon: GitGraph },
+                  { label: "Perlu Perhatian", value: pegawaiTanpaAtasan.length, icon: AlertCircle },
+                ].map((stat, idx) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div key={idx} className="p-4 rounded-xl border border-blue-200/70 bg-white/50 backdrop-blur-sm shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${idx === 2 && stat.value > 0 ? "bg-amber-100" : "bg-blue-100"}`}>
+                          <Icon size={18} className={idx === 2 && stat.value > 0 ? "text-amber-500" : "text-blue-500"} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{stat.label}</p>
+                          <p className={`text-xl font-black ${idx === 2 && stat.value > 0 ? "text-amber-600" : "text-blue-700"}`}>{stat.value}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* Pimpinan Tertinggi Card */}
+              {!isLoading && rootsValid.length === 1 && (
+                <div className="pt-2 border-t border-blue-100">
+                   <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-3 ml-1">Pimpinan Tertinggi</p>
+                   {renderPegawaiItem(rootsValid[0], 0, 0)}
+                </div>
+              )}
             </div>
           </div>
         </header>
 
-        {/* Warning: struktur terpecah */}
+        {/* Warning Section */}
         {!isLoading && pegawaiTanpaAtasan.length > 0 && (
           <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-6">
             <div className="rounded-2xl border border-amber-300 bg-linear-to-br from-amber-50 to-amber-100/50 backdrop-blur-sm p-4 sm:p-5 shadow-lg">
@@ -236,48 +267,43 @@ export default function DaftarPegawai() {
                   <AlertCircle size={20} className="text-amber-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-amber-800 mb-1">Struktur Organisasi Terpecah</h3>
-                  <p className="text-xs text-amber-700 mb-3">Pegawai berikut belum terhubung ke hierarki utama. Silahkan set atasan mereka.</p>
-                  <ul className="space-y-2">
-                    {pegawaiTanpaAtasan.map((p) => (
-                      <li key={p.id_pegawai} className="text-sm text-amber-800 flex items-center justify-between gap-4">
-                        <span>
-                          <span className="font-semibold">{p.nama_lengkap || "Nama Tidak Tersedia"}</span>
-                          <span className="text-amber-600"> ({p.nama_jabatan || "Tanpa Jabatan"})</span>
-                          {(p.kelas_jabatan || p.kelas_pegawai) && <span className="ml-2 text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Kelas {p.kelas_jabatan || p.kelas_pegawai}</span>}
-                        </span>
-                        <button onClick={() => navigate(`/dokumen/pegawai/edit/${p.id_pegawai}`)} className="shrink-0 px-3 py-1 rounded-lg bg-amber-200/70 hover:bg-amber-300 text-amber-800 font-medium text-xs transition-all duration-200">
-                          Set Atasan
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex justify-between items-center mb-1">
+                    <h3 className="font-bold text-amber-800">Struktur Organisasi Terpecah</h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsWarningCollapsed(!isWarningCollapsed)}
+                      className="px-2.5 py-1 text-[10px] font-bold bg-amber-200/70 hover:bg-amber-300 text-amber-800 rounded-lg transition-all"
+                    >
+                      {isWarningCollapsed ? "Tampilkan Detail (Flip)" : "Sembunyikan"}
+                    </button>
+                  </div>
+                  <p className="text-xs text-amber-700">
+                    Ada {pegawaiTanpaAtasan.length} pegawai belum terhubung ke hierarki utama (belum di-set atasan).
+                  </p>
+                  
+                  {!isWarningCollapsed && (
+                    <ul className="space-y-2 mt-3 animate-in fade-in duration-200">
+                      {pegawaiTanpaAtasan.map((p) => (
+                        <li key={p.id_pegawai} className="text-sm text-amber-800 flex items-center justify-between gap-4 border-b border-amber-200/40 pb-2 last:border-0 last:pb-0">
+                          <span>
+                            <span className="font-semibold">{p.nama_lengkap || "Nama Tidak Tersedia"}</span>
+                            <span className="text-amber-600"> ({p.nama_jabatan || "Tanpa Jabatan"})</span>
+                            {(p.kelas_jabatan || p.kelas_pegawai) && <span className="ml-2 text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Kelas {p.kelas_jabatan || p.kelas_pegawai}</span>}
+                          </span>
+                          <button onClick={() => navigate(`/dokumen/pegawai/edit/${p.id_pegawai}`)} className="shrink-0 px-3 py-1 rounded-lg bg-amber-200/70 hover:bg-amber-300 text-amber-800 font-medium text-xs transition-all duration-200">
+                            Set Atasan
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Error */}
-        {error && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-6">
-            <div className="rounded-2xl border border-red-300 bg-linear-to-br from-red-50 to-red-100/50 backdrop-blur-sm p-4 sm:p-5 shadow-lg">
-              <div className="flex items-center gap-4">
-                <div className="shrink-0 p-2 rounded-lg bg-red-200/50">
-                  <AlertCircle size={20} className="text-red-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-red-700">{error}</p>
-                </div>
-                <button onClick={fetchPegawai} className="shrink-0 px-3 py-1 rounded-lg bg-red-200/70 hover:bg-red-300 text-red-700 font-medium text-xs transition-all duration-200">
-                  Coba Lagi
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Main */}
+        {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24">
@@ -289,29 +315,6 @@ export default function DaftarPegawai() {
             </div>
           ) : (
             <div className="space-y-2">
-              {/* Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-                {[
-                  { label: "Total Pegawai", value: pegawai.length, icon: Users },
-                  { label: "Jumlah Cabang", value: roots.length, icon: GitGraph },
-                  { label: "Perlu Perhatian", value: pegawaiTanpaAtasan.length, icon: AlertCircle },
-                ].map((stat, idx) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div key={idx} className="p-4 rounded-xl border border-blue-200/70 bg-linear-to-br from-white/80 to-blue-50/80 backdrop-blur-sm">
-                      <div className="flex items-center gap-3">
-                        <Icon size={18} className={idx === 2 && stat.value > 0 ? "text-amber-500" : "text-blue-500"} />
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">{stat.label}</p>
-                          <p className={`text-xl font-bold ${idx === 2 && stat.value > 0 ? "text-amber-600" : "text-gray-800"}`}>{stat.value}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Tree */}
               {roots.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-blue-300 rounded-3xl bg-linear-to-br from-blue-100/30 to-cyan-100/30">
                   <div className="p-4 rounded-2xl bg-blue-100 border border-blue-200 mb-4">
@@ -319,18 +322,23 @@ export default function DaftarPegawai() {
                   </div>
                   <p className="text-xl font-bold text-gray-800 mb-2">Data Pegawai Kosong</p>
                   <p className="text-gray-500 text-sm mb-6 text-center max-w-sm">Belum ada data pegawai. Tambahkan pegawai pertama untuk memulai.</p>
-                  <button
-                    onClick={() => navigate("/dokumen/pegawai/tambah-pegawai")}
-                    className="px-6 py-3 rounded-lg bg-linear-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 font-bold text-sm transition-all duration-200 shadow-lg shadow-blue-500/30 text-white"
-                  >
-                    Tambah Sekarang
-                  </button>
                 </div>
               ) : (
                 (() => {
-                  // Set id pegawai yang masuk warning — tidak perlu ditampilkan di tree
-                  const tanpaAtasanIds = new Set(pegawaiTanpaAtasan.map((p) => String(p.id_pegawai)));
-                  const rootsValid = roots.filter((p) => !tanpaAtasanIds.has(String(p.id_pegawai)));
+                  if (rootsValid.length === 1) {
+                    const mainRoot = rootsValid[0];
+                    const children = childrenMap[String(mainRoot.id_pegawai)] || [];
+                    return (
+                      <>
+                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-4 ml-1">Anggota Tim / Subordinat</p>
+                        {children.length > 0 ? (
+                           children.map((child, idx) => renderPegawaiItem(child, 0, idx))
+                        ) : (
+                           <p className="text-sm text-gray-400 italic py-10 text-center">Belum ada bawahan yang terdaftar.</p>
+                        )}
+                      </>
+                    );
+                  }
 
                   return rootsValid.length > 0 ? (
                     rootsValid.map((rootPegawai, idx) => renderPegawaiItem(rootPegawai, 0, idx))
@@ -340,7 +348,6 @@ export default function DaftarPegawai() {
                         <AlertCircle size={48} className="text-amber-400" />
                       </div>
                       <p className="text-xl font-bold text-gray-800 mb-2">Hierarki Belum Terbentuk</p>
-                      <p className="text-gray-500 text-sm text-center max-w-sm">Semua pegawai belum terhubung ke pimpinan tertinggi. Cek daftar peringatan di atas.</p>
                     </div>
                   );
                 })()
