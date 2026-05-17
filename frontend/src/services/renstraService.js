@@ -11,7 +11,7 @@ const renstraService = {
   getProgram: () => axiosInstance.get("/renstra/program"),
 
   // Mengambil kegiatan berdasarkan program ID
-  getKegiatanByProgram: (programId) => 
+  getKegiatanByProgram: (programId) =>
     axiosInstance.get(`/renstra/kegiatan?program_id=${programId}`),
 
   // Menghapus program
