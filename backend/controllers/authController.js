@@ -3,6 +3,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 
+const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 4849}`;
+
 /**
  * Helper: hapus file avatar lama dari disk
  */
@@ -131,9 +133,7 @@ export const registerUser = async (req, res) => {
         username,
         name,
         role: role || "user",
-        avatar: avatarPath
-          ? `${process.env.BASE_URL || "http://localhost:4849"}/${avatarPath}`
-          : null,
+        avatar: avatarPath ? `${BASE_URL}/${avatarPath}` : null,
       },
     });
   } catch (error) {
@@ -209,9 +209,7 @@ export const loginUser = async (req, res) => {
     // }
 
     // ✅ Build avatar URL
-    const avatarUrl = user.avatar
-      ? `${process.env.BASE_URL || "http://localhost:4849"}/${user.avatar}`
-      : null;
+    const avatarUrl = user.avatar ? `${BASE_URL}/${user.avatar}` : null;
 
     res.json({
       success: true,
@@ -254,9 +252,7 @@ export const getCurrentUser = async (req, res) => {
     const user = rows[0];
 
     // ✅ Build avatar URL
-    const avatarUrl = user.avatar
-      ? `${process.env.BASE_URL || "http://localhost:4849"}/${user.avatar}`
-      : null;
+    const avatarUrl = user.avatar ? `${BASE_URL}/${user.avatar}` : null;
 
     res.json({
       success: true,
@@ -280,10 +276,9 @@ export const getAllUsers = async (req, res) => {
       "SELECT id, nip, username, name, role, avatar, is_active FROM users ORDER BY created_at DESC"
     );
 
-    const baseUrl = process.env.BASE_URL || "http://localhost:4849";
     const data = rows.map((u) => ({
       ...u,
-      avatar: u.avatar ? `${baseUrl}/${u.avatar}` : null,
+      avatar: u.avatar ? `${BASE_URL}/${u.avatar}` : null,
     }));
 
     res.json({ success: true, count: data.length, data });

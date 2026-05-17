@@ -112,6 +112,7 @@ const allowedOrigins = [
   "http://192.168.1.5:3002",
   "http://192.168.1.8:3001",
   "http://192.168.1.8:4849",
+   "http://192.168.1.12:3001",
 ];
 
 // ================================
@@ -121,7 +122,12 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+      
+      // Allow localhost, 127.0.0.1, and private local network IPs (e.g. 192.168.x.x, 10.x.x.x, etc.)
+      const isLocalhost = origin.includes("localhost") || origin.includes("127.0.0.1");
+      const isLocalIP = /^http(s)?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin);
+
+      if (allowedOrigins.includes(origin) || isLocalhost || isLocalIP) {
         return callback(null, true);
       }
       console.warn("❌ Blocked CORS Origin:", origin);
@@ -305,7 +311,7 @@ io.on("connection", (socket) => {
 // ================================
 // 🔹 Jalankan server
 // ================================
-const HOST = "0.0.0.0";
+const HOST = process.env.HOST || "0.0.0.0";
 
 server.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on http://${HOST}:${PORT}`);

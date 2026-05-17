@@ -25,6 +25,9 @@ import VerificationPage from "./folder/INVENTARIS/VerificationPage";
 import PrintQrKibBPage from "./folder/INVENTARIS/PrintQrKibBPage";
 import PrintQrKibEPage from "./folder/INVENTARIS/PrintQrKibEPage";
 import PrintKibBTablePage from "./folder/INVENTARIS/PrintKibBTablePage";
+import PrintKibBChecklistPage from "./folder/INVENTARIS/PrintKibBChecklistPage";
+import PrintKibETablePage from "./folder/INVENTARIS/PrintKibETablePage";
+import PrintKibEChecklistPage from "./folder/INVENTARIS/PrintKibEChecklistPage";
 
 import RenjaPage from "./folder/RENJA/RenjaPage";
 import SopPage from "./folder/SOP/SopPage";
@@ -75,6 +78,9 @@ function App() {
         <Route path="/print-qr-kib-b" element={<PrintQrKibBPage />} />
         <Route path="/print-qr-kib-e" element={<PrintQrKibEPage />} />
         <Route path="/print-table-kib-b" element={<PrintKibBTablePage />} />
+        <Route path="/print-checklist-kib-b" element={<PrintKibBChecklistPage />} />
+        <Route path="/print-table-kib-e" element={<PrintKibETablePage />} />
+        <Route path="/print-checklist-kib-e" element={<PrintKibEChecklistPage />} />
         <Route path="/buku-tamu/check-in" element={<BukuTamuCheckIn />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />

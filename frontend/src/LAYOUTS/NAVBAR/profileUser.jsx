@@ -6,7 +6,7 @@ import axios from "axios";
 import Cropper from "react-easy-crop";
 import { ArrowLeft, Camera, CheckCircle, AlertCircle, User, Hash, AtSign, Save, Loader2, Shield, X, ZoomIn, ZoomOut, RotateCcw, Crop, Phone } from "lucide-react";
 
-const api = axios.create({ baseURL: "http://localhost:4849" });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://localhost:4849" });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");

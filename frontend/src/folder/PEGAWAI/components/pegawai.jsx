@@ -17,6 +17,7 @@ export default function DaftarPegawai() {
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [isWarningCollapsed, setIsWarningCollapsed] = useState(false);
 
   const fetchPegawai = async () => {
     try {
@@ -266,22 +267,36 @@ export default function DaftarPegawai() {
                   <AlertCircle size={20} className="text-amber-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-amber-800 mb-1">Struktur Organisasi Terpecah</h3>
-                  <p className="text-xs text-amber-700 mb-3">Pegawai berikut belum terhubung ke hierarki utama. Silahkan set atasan mereka.</p>
-                  <ul className="space-y-2">
-                    {pegawaiTanpaAtasan.map((p) => (
-                      <li key={p.id_pegawai} className="text-sm text-amber-800 flex items-center justify-between gap-4">
-                        <span>
-                          <span className="font-semibold">{p.nama_lengkap || "Nama Tidak Tersedia"}</span>
-                          <span className="text-amber-600"> ({p.nama_jabatan || "Tanpa Jabatan"})</span>
-                          {(p.kelas_jabatan || p.kelas_pegawai) && <span className="ml-2 text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Kelas {p.kelas_jabatan || p.kelas_pegawai}</span>}
-                        </span>
-                        <button onClick={() => navigate(`/dokumen/pegawai/edit/${p.id_pegawai}`)} className="shrink-0 px-3 py-1 rounded-lg bg-amber-200/70 hover:bg-amber-300 text-amber-800 font-medium text-xs transition-all duration-200">
-                          Set Atasan
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex justify-between items-center mb-1">
+                    <h3 className="font-bold text-amber-800">Struktur Organisasi Terpecah</h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsWarningCollapsed(!isWarningCollapsed)}
+                      className="px-2.5 py-1 text-[10px] font-bold bg-amber-200/70 hover:bg-amber-300 text-amber-800 rounded-lg transition-all"
+                    >
+                      {isWarningCollapsed ? "Tampilkan Detail (Flip)" : "Sembunyikan"}
+                    </button>
+                  </div>
+                  <p className="text-xs text-amber-700">
+                    Ada {pegawaiTanpaAtasan.length} pegawai belum terhubung ke hierarki utama (belum di-set atasan).
+                  </p>
+                  
+                  {!isWarningCollapsed && (
+                    <ul className="space-y-2 mt-3 animate-in fade-in duration-200">
+                      {pegawaiTanpaAtasan.map((p) => (
+                        <li key={p.id_pegawai} className="text-sm text-amber-800 flex items-center justify-between gap-4 border-b border-amber-200/40 pb-2 last:border-0 last:pb-0">
+                          <span>
+                            <span className="font-semibold">{p.nama_lengkap || "Nama Tidak Tersedia"}</span>
+                            <span className="text-amber-600"> ({p.nama_jabatan || "Tanpa Jabatan"})</span>
+                            {(p.kelas_jabatan || p.kelas_pegawai) && <span className="ml-2 text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Kelas {p.kelas_jabatan || p.kelas_pegawai}</span>}
+                          </span>
+                          <button onClick={() => navigate(`/dokumen/pegawai/edit/${p.id_pegawai}`)} className="shrink-0 px-3 py-1 rounded-lg bg-amber-200/70 hover:bg-amber-300 text-amber-800 font-medium text-xs transition-all duration-200">
+                            Set Atasan
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             </div>

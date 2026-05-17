@@ -4,6 +4,9 @@ import axiosInstance from "@/utils/axiosInstance";
 export default function PohonKinerjaPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [printOrientation, setPrintOrientation] = useState("landscape");
+  const [printSize, setPrintSize] = useState("A4");
+  const [printScale, setPrintScale] = useState(70);
 
   useEffect(() => {
     fetchPohonKinerja();
@@ -190,26 +193,75 @@ export default function PohonKinerjaPage() {
           </p>
         </div>
 
-        <button
-          onClick={handlePrint}
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow-md transition-all flex items-center gap-2"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-            />
-          </svg>
+        <div className="flex items-center gap-3">
+          {/* Orientasi */}
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Orientasi</span>
+            <select
+              value={printOrientation}
+              onChange={(e) => setPrintOrientation(e.target.value)}
+              className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-bold focus:border-blue-500 outline-none"
+            >
+              <option value="landscape">Landscape</option>
+              <option value="portrait">Portrait</option>
+            </select>
+          </div>
 
-          Cetak PDF
-        </button>
+          {/* Ukuran Kertas */}
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ukuran Kertas</span>
+            <select
+              value={printSize}
+              onChange={(e) => setPrintSize(e.target.value)}
+              className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-bold focus:border-blue-500 outline-none"
+            >
+              <option value="A4">A4</option>
+              <option value="A3">A3</option>
+              <option value="Legal">Legal (F4)</option>
+              <option value="Letter">Letter</option>
+            </select>
+          </div>
+
+          {/* Skala Zoom */}
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Skala Bagan</span>
+            <select
+              value={printScale}
+              onChange={(e) => setPrintScale(Number(e.target.value))}
+              className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-bold focus:border-blue-500 outline-none"
+            >
+              <option value="100">100%</option>
+              <option value="90">90%</option>
+              <option value="80">80%</option>
+              <option value="75">75%</option>
+              <option value="70">70%</option>
+              <option value="60">60%</option>
+              <option value="50">50%</option>
+              <option value="40">40%</option>
+              <option value="30">30%</option>
+            </select>
+          </div>
+
+          <button
+            onClick={handlePrint}
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-md transition-all flex items-center gap-2 self-end h-[34px]"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+              />
+            </svg>
+            Cetak PDF
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -217,8 +269,8 @@ export default function PohonKinerjaPage() {
           Memuat Bagan Pohon Kinerja...
         </div>
       ) : (
-        <div className="p-10 overflow-x-auto overflow-y-auto max-h-[85vh]">
-          <div className="min-w-max pb-32">
+        <div className="p-10 overflow-x-auto overflow-y-auto max-h-[85vh] print-container">
+          <div className="min-w-max pb-32 print-scaled">
             {treeData.map((top, idx) => {
               const programs = Object.values(top.programs);
 
@@ -312,16 +364,47 @@ export default function PohonKinerjaPage() {
           @media print {
 
             @page {
-              size: landscape;
-              margin: 15mm;
+              size: ${printSize.toLowerCase()} ${printOrientation};
+              margin: 10mm;
             }
 
             body {
               background: white !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
 
+            /* Sembunyikan semua elemen layout global kecuali container print */
+            nav,
+            footer,
+            header,
+            [class*="navbar"],
+            [class*="footer"],
             .print\\:hidden {
               display: none !important;
+            }
+
+            /* Pastikan container pohon mengambil alih seluruh layar fisik */
+            .print-container {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: visible !important;
+              max-height: none !important;
+              background: transparent !important;
+            }
+
+            .print-scaled {
+              transform: scale(${printScale / 100}) !important;
+              transform-origin: top center !important;
+              width: ${100 / (printScale / 100)}% !important;
+              margin: 0 auto !important;
+              display: flex !important;
+              flex-direction: column !important;
+              align-items: center !important;
             }
 
             .overflow-x-auto,

@@ -90,11 +90,25 @@ export default function EditKibEModal({ open, onClose, onSuccess, data }) {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-500">Tahun Perolehan</label>
-              <input type="number" name="tahun_perolehan" value={formData.tahun_perolehan} onChange={handleChange} className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none" />
+              <input 
+                type="number" 
+                name="tahun_perolehan" 
+                value={formData.tahun_perolehan} 
+                onChange={handleChange} 
+                onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
+                className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none" 
+              />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-500">Harga (Rp)</label>
-              <input type="number" name="harga" value={formData.harga} onChange={handleChange} className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none" />
+              <input 
+                type="number" 
+                name="harga" 
+                value={formData.harga} 
+                onChange={handleChange} 
+                onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
+                className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none" 
+              />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-500">Status</label>
