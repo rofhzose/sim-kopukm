@@ -112,7 +112,8 @@ const allowedOrigins = [
   "http://192.168.1.5:3002",
   "http://192.168.1.8:3001",
   "http://192.168.1.8:4849",
-   "http://192.168.1.12:3001",
+  "http://192.168.1.12:3001",
+  "http://192.168.1.7:3001",
 ];
 
 // ================================
@@ -122,7 +123,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      
+
       // Allow localhost, 127.0.0.1, and private local network IPs (e.g. 192.168.x.x, 10.x.x.x, etc.)
       const isLocalhost = origin.includes("localhost") || origin.includes("127.0.0.1");
       const isLocalIP = /^http(s)?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin);
@@ -199,7 +200,7 @@ app.use(
     res.setHeader("Access-Control-Allow-Origin", "*");
     try {
       res.removeHeader("X-Frame-Options");
-    } catch (e) {}
+    } catch (e) { }
     next();
   },
   express.static(uploadsDir, { index: false }),
@@ -240,8 +241,8 @@ app.use("/api/dokumen/lke", dokumenLkeRoutes);
 app.use("/api/dokumen/dpa", dokumenDpaRoutes);
 app.use("/api/dokumen/kak", dokumenKakRoutes);
 app.use("/api/master", masterRoutes);
-app.use("/api/user", verifyToken, userProfileRoutes); 
-app.use("/api/user", verifyToken, userRoutes);        
+app.use("/api/user", verifyToken, userProfileRoutes);
+app.use("/api/user", verifyToken, userRoutes);
 app.use("/api/rencana-aksi", rencanaAksiRoutes);
 app.use("/api/pohon-kinerja", pohonKinerjaRoutes);
 app.use("/api/status-pegawai", statusPegawaiRoute);
